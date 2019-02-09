@@ -1,0 +1,54 @@
+GLOBAL
+logfile     = /home/netcam/pircam_log.txt
+stop_file   = /tmp/pircam_stop
+pause_file  = /tmp/pircam_pause
+data_dir    = /home
+base_cam    = netcam
+brick_port  = 4223
+webserver   = websrv
+rec_sec     = 20
+max_queue   = 5
+sleep_sec   = 5
+reconf_sec  = 300
+xmpp_to     = user@example.org
+xmpp_from   = pircam@example.org
+xmpp_pass   = password
+xmpp_server = example.org
+
+CAMERA
+netcam
+mjpeg = http://192.168.1.144/video/mjpg.cgi
+audio = rtsp://192.168.1.144/play1.sdp
+read  = 9000000
+fps   =	5
+netcam2
+mjpeg = http://192.168.1.129/video/mjpg.cgi
+audio = rtsp://192.168.1.129/play1.sdp
+read  = 9000000
+fps   = 5
+netcam3	
+mjpeg = http://admin:rattenhund@192.168.1.138/video1.mjpeg
+audio = rtsp://192.168.1.138/live2.sdp
+read  = 9000000
+fps   = 7
+
+SENSOR
+Ek8	
+cam   = netcam
+ip    = 192.168.1.111
+vers  = 2
+sensi = 90
+Ek5
+cam   = netcam2
+ip    = 192.168.1.100
+vers  = 2
+sensi = 80
+Eki
+cam   = netcam3
+ip    = 192.168.1.111
+vers  = 2
+sensi = 90
+BYB
+cam   = netcam3
+ip    = 192.168.1.111
+vers  = 1

@@ -1,0 +1,195 @@
+#!/usr/bin/python
+import os, sys, time, threading, urllib, subprocess, xmpp
+from tinkerforge.ip_connection import IPConnection
+from tinkerforge.bricklet_motion_detector import BrickletMotionDetector
+from tinkerforge.bricklet_motion_detector_v2 import BrickletMotionDetectorV2
+if os.fork(): sys.exit() # Run as daemon
+
+# Globals
+config_file = '/opt/pircam_config.txt'
+current_video_thread, current_audio_thread = {}, {} # One thread per camera, for video and audio
+current_convert_thread = None # Only one convert thread, for video and audio
+video_queue, audio_queue = {}, {} # One queue per camera
+sensorAPI = {} # Motion detector dictionary
+cbFuns = {} # Callback function dictionary
+ipcon = {} # TCP/IP connections
+
+def load_config(fn, sel_mode):
+	cdict, cmode = {}, ''
+	for i in open(fn):
+		if not i.strip(): continue
+		isp = i.strip().split('=')
+		if len(isp) == 1:
+			title = isp[0].strip()
+			if title in ['GLOBAL', 'CAMERA', 'SENSOR']: cmode = title
+			else: device = title
+		if cmode != sel_mode: continue
+		if len(isp) == 2:
+			key, value = isp[0].strip(), isp[1].strip()
+			if cmode == 'GLOBAL': 
+				cdict[key] = value
+			else:
+				if not cdict.has_key(device): cdict[device] = {}
+				cdict[device][key] = value
+	return cdict
+
+def logg(x):
+	x = '%s: %s' % (time.strftime('%Y-%m-%d %H:%M:%S'), x)
+	open(config['logfile'], 'a').write(x + '\n')
+ 
+def download_mjpeg(CAMID):
+	global video_queue
+	ofn = '%s/%s_mjpeg/%s.mjpeg' % (config['data_dir'], CAMID, time.strftime('%Y%m%d_%H%M%S'))
+	try:
+		stream = urllib.urlopen(cameras[CAMID]['mjpeg']).read(int(cameras[CAMID]['read']))
+	except:
+		logg('Video download error for %s!' % CAMID)
+		return
+	open(ofn, 'w').write(stream)
+	if not video_queue.has_key(CAMID): video_queue[CAMID] = []
+	video_queue[CAMID].append(ofn)
+	logg('Downloaded %2.2f MB from %s to %s' % (len(stream)/1024.0/1024.0, CAMID, ofn))
+ 
+def log_and_run(cmd):
+	rcode = subprocess.call(cmd)
+	if rcode > 0: logg('%s (%d)' % (' '.join(cmd), rcode))
+ 
+def download_audio(CAMID):
+	global audio_queue
+	ofn = '%s/%s_mp4/%s.mp4' % (config['data_dir'], CAMID, time.strftime('%Y%m%d_%H%M%S'))
+	cmd = 'ffmpeg', '-hide_banner', '-i', cameras[CAMID]['audio'], '-vn', '-acodec', 'copy', '-t', config['rec_sec'], ofn
+	log_and_run(cmd)
+	if not os.path.isfile(ofn):
+		logg('Audio download failed for %s!' % CAMID)
+		return
+	if not audio_queue.has_key(CAMID): audio_queue[CAMID] = []
+	audio_queue[CAMID].append(ofn)
+	logg('Downloaded %2.2f KB from %s to %s' % (os.stat(ofn).st_size/1024.0, CAMID, ofn))
+ 
+def extract_first_jpeg(mjpeg_data): # Exctract first image from MJPEG
+	header = mjpeg_data.split('\r\n\r\n')[0]
+	content_length = int(header.split('Length: ')[1].split('\r\n')[0])
+	data_start = len(header) + 4
+	return mjpeg_data[data_start:(data_start + content_length)]
+ 
+def upload_to_webserver(fn, CAMID):
+	cmd = 'rsync', fn, '%s:%s/%s/' % (config['webserver'], config['data_dir'], CAMID)
+	log_and_run(cmd)
+ 
+def run_converter(CAMID):
+	global video_queue, audio_queue, cameras
+	local_video_queue, local_audio_queue = list(video_queue[CAMID]), list(audio_queue[CAMID]) # Copy queue
+	video_queue[CAMID], audio_queue[CAMID] = [], [] # Empty queue
+	logg('Converter for %s started: %d video, %d audio files' % (CAMID, len(local_video_queue), len(local_audio_queue)))
+	base = lambda x : os.path.splitext(os.path.basename(x))[0]
+	unixtime = lambda x : time.mktime(time.strptime(x, "%Y%m%d_%H%M%S"))
+	audio_base = [base(i) for i in local_audio_queue]
+	fps = int(cameras[CAMID]['fps'])
+	for vfn in local_video_queue:
+		jfn = '%s/%s/%s.jpg' % (config['data_dir'], CAMID, base(vfn))
+		ofn = '%s/%s/%s.ogg' % (config['data_dir'], CAMID, base(vfn))
+		mjpeg_data = open(vfn).read()
+		nb_frames = mjpeg_data.count('image/jpeg')
+		jpeg_data = extract_first_jpeg(mjpeg_data)
+		open(jfn, 'w').write(jpeg_data)
+		logg('Image of %2.2f KB saved to %s' % (len(jpeg_data)/1024.0, jfn))
+		video_sec = nb_frames / float(fps)
+		logg('%s contains %d frames -> %s seconds' % (vfn, nb_frames, video_sec))
+		if nb_frames < fps:
+			logg('Truncated video for %s' % CAMID)
+			continue
+		if local_audio_queue:
+			video_time = unixtime(base(vfn))
+			audio_diff = [abs(unixtime(i) - video_time) for i in audio_base]
+			afn = local_audio_queue[audio_diff.index(min(audio_diff))]			
+			cmd = 'ffmpeg', '-hide_banner', '-y', '-r', str(fps), '-i', vfn, '-i', afn, '-codec:v', 'libtheora', '-qscale:v', '7', ofn
+		else:
+			cmd = 'ffmpeg', '-hide_banner', '-y', '-r', str(fps), '-i', vfn, '-codec:v', 'libtheora', '-qscale:v', '7', ofn
+		log_and_run(cmd)
+		if not os.path.isfile(ofn):
+			logg('Failed to create %s' % ofn)
+			continue
+		logg('Video of %2.2f MB created at %s' % (os.stat(ofn).st_size/1024.0/1024.0, ofn))
+		upload_to_webserver(ofn, CAMID)
+		upload_to_webserver(jfn, CAMID)
+	cameras[CAMID]['read'] = int(int(cameras[CAMID]['read']) * int(config['rec_sec']) / video_sec)
+	logg('New MJPEG read length for %s: %2.2f MB' % (CAMID, cameras[CAMID]['read']/1024.0/1024.0))
+	log_and_run(['netcam_index_new']) # rewrite this
+	upload_to_webserver('%s/%s/netcam.html' % (config['data_dir'], config['base_cam']), config['base_cam'])
+	upload_to_webserver(config['logfile'], config['base_cam'])
+	logg('Converter thread for %s finished' % CAMID)
+ 
+def send_jabber(CAMID):
+	jid = xmpp.protocol.JID(config['xmpp_from'])
+	cl = xmpp.Client(config['xmpp_server'], debug=[])
+	if not cl.connect(use_srv=False): return
+	if not cl.auth(jid.getNode(), config['xmpp_pass']): return
+	mid = cl.send(xmpp.protocol.Message(config['xmpp_to'], CAMID))
+	logg('Jabber message id %s for %s sent' % (str(mid), CAMID))
+ 
+def cb_motion_detected(CAMID): # Callback function for motion detected callback
+	global current_video_thread, current_audio_thread, audio_queue
+	if os.path.isfile(config['pause_file']):
+		logg('Motion %s, paused' % CAMID)
+		return
+	if current_video_thread.has_key(CAMID) and current_video_thread[CAMID].isAlive(): return
+	current_video_thread[CAMID] = threading.Thread(target=download_mjpeg, args=[CAMID])
+	current_video_thread[CAMID].start()
+	logg('Motion %s, video thread started' % CAMID)
+	send_jabber(CAMID)
+	if cameras[CAMID]['audio'] == 'None':
+		audio_queue[CAMID] = []
+		return
+	if current_audio_thread.has_key(CAMID) and current_audio_thread[CAMID].isAlive(): return
+	current_audio_thread[CAMID] = threading.Thread(target=download_audio, args=[CAMID])
+	current_audio_thread[CAMID].start()
+	logg('Motion %s, audio thread started' % CAMID)
+
+def is_idle():
+	for CAMID in cameras.keys():
+		if current_video_thread.has_key(CAMID) and current_video_thread[CAMID].isAlive(): return False
+		if current_audio_thread.has_key(CAMID) and current_audio_thread[CAMID].isAlive(): return False
+	if current_convert_thread != None and current_convert_thread.isAlive(): return False
+	return True
+ 
+def configure_motion_detector(uid):
+	global sensorAPI, cbFuns
+	sensorAPI[uid].set_status_led_config(0) # Turn off status LED
+	if sensors[uid]['vers'] == '2': sensorAPI[uid].set_sensitivity(sensors[uid]['sensi']) # Set sensitivity
+	cbFuns[uid] = lambda : cb_motion_detected(sensors[uid]['cam']) # Create callback function
+	sensorAPI[uid].register_callback(sensorAPI[uid].CALLBACK_MOTION_DETECTED, cbFuns[uid]) # Register callback function
+	logg('Callback for %s at %s to %s registered' % (uid, sensors[uid]['ip'], sensors[uid]['cam']))
+
+sensors = load_config(config_file, 'SENSOR')
+cameras = load_config(config_file, 'CAMERA')
+config  = load_config(config_file, 'GLOBAL')
+logg("%d sensors, %d cameras" % (len(sensors), len(cameras)))
+for uid in sensors.keys():
+	ip = sensors[uid]['ip']
+	if not ipcon.has_key(ip):
+		ipcon[ip] = IPConnection() # Create IP connection
+		ipcon[ip].connect(ip, int(config['brick_port'])) # Connect to brickd
+	if sensors[uid]['vers'] == '1': sensorAPI[uid] = BrickletMotionDetector(uid, ipcon[ip]) # Create device object
+	if sensors[uid]['vers'] == '2': sensorAPI[uid] = BrickletMotionDetectorV2(uid, ipcon[ip]) # Create device object
+	configure_motion_detector(uid)
+logg('IP connections: %d' % len(ipcon))
+
+reconfigure_time = time.time()
+while True:
+	threading.Event().wait(int(config['sleep_sec']))
+	for CAMID in cameras.keys():
+		if not video_queue.has_key(CAMID): continue
+		if len(video_queue[CAMID]) == 0: continue
+		if is_idle() or len(video_queue[CAMID]) > int(config['max_queue']):
+			current_convert_thread = threading.Thread(target=run_converter, args=[CAMID])
+			current_convert_thread.start()
+			break
+	if is_idle() and os.path.isfile(config['stop_file']): break
+	if reconfigure_time + int(config['reconf_sec']) < time.time():
+		for uid in sensors.keys():
+			if sensorAPI[uid].get_status_led_config() > 0:
+				logg('Bricklet %s reset' % uid)
+				configure_motion_detector(uid)
+		reconfigure_time = time.time()
+for ip in ipcon.keys(): ipcon[ip].disconnect()
+logg('Finished')
