@@ -1,4 +1,9 @@
 #!/usr/bin/python
+
+# PIR-CAM, 2019 by Niklaus Fankhauser
+# Motion detections sensor triggered capture and combination of MJPEG video and audio from D-Link network cameras.
+# MJPEG video does not have the 3 second delay of MP4 by RTSP.
+
 import os, sys, time, threading, urllib, subprocess, xmpp
 from tinkerforge.ip_connection import IPConnection
 from tinkerforge.bricklet_motion_detector import BrickletMotionDetector
