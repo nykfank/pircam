@@ -1,0 +1,3 @@
+PIR-CAM, 2019 by Niklaus Fankhauser
+Motion detections sensor triggered capture and combination of MJPEG video and audio from D-Link network cameras.
+MJPEG video does not have the 3 second delay of MP4 by RTSP.
