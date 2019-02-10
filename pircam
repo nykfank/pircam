@@ -99,7 +99,7 @@ def run_converter(CAMID):
 		open(jfn, 'w').write(jpeg_data)
 		logg('Image of %2.2f KB saved to %s' % (len(jpeg_data)/1024.0, jfn))
 		video_sec = nb_frames / float(fps)
-		logg('%s contains %d frames -> %s seconds' % (vfn, nb_frames, video_sec))
+		logg('%s contains %d frames -> %2.2f seconds' % (vfn, nb_frames, video_sec))
 		if nb_frames < fps:
 			logg('Truncated video for %s' % CAMID)
 			continue
