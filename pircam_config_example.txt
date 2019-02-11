@@ -14,6 +14,12 @@ xmpp_to     = user@example.org
 xmpp_from   = pircam@example.org
 xmpp_pass   = password
 xmpp_server = example.org
+elementPath = /opt/photoswipe_element.txt
+headerPath  = /opt/photoswipe_header.txt
+scriptPath  = /opt/photoswipe_script.txt
+size_x      = 1280
+size_y      = 720
+numLast     = 150
 
 CAMERA
 netcam
@@ -37,12 +43,12 @@ Ek8
 cam   = netcam
 ip    = 192.168.1.111
 vers  = 2
-sensi = 90
+sensi = 80
 Ek5
 cam   = netcam2
 ip    = 192.168.1.100
 vers  = 2
-sensi = 80
+sensi = 60
 Eki
 cam   = netcam3
 ip    = 192.168.1.111

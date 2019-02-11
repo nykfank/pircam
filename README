@@ -2,3 +2,36 @@ I evaluated the motion detection capabilities of D-Link DCS-936L and DCS-2670 ne
 I wanted to record video by RTSP triggered by the PIR motion detector. But both cameras have a delay of at least 3 seconds before recording starts. So it is not very useful because whatever moved may already have left by then. The solution is to use MJPEG recording, which starts almost immediately. Audio is streamed by RTSP separately. The delay for RTSP audio is not as noticable as for video, because it is inherent to the h264 implementation of these cameras. 
 
 This python program performs motion detections sensor triggered capture and combination of MJPEG video and audio from D-Link network cameras, as well as notification by the xmpp instant messaging protocol. I tested with ejabberd running on the same machine. It combines and converts MJPEG video and AAC audio to the ogg vorbis/theora format using ffmpeg and uploads it to a separate webserver by rsync.
+
+Options in the config file:
+
+GLOBAL
+logfile     = Path to file where log will be written to.
+stop_file   = If this file exists, the daemon stops.
+pause_file  = If this file exists, no recording is done, but motion still logged.
+data_dir    = Base directory for downloaded video and audio.
+base_cam    = Logfile and index will be uploaded there.
+brick_port  = Default tinkerforge port (4223)
+webserver   = .ssh/config name for webserver
+rec_sec     = Seconds to record.
+max_queue   = Maximum queue size before converting while recording.
+sleep_sec   = Seconds to sleep in mainloop
+reconf_sec  = Seconds before sensor status is checked
+xmpp_to     = XMPP account to send notification to
+xmpp_from   = XMPP sender account 
+xmpp_pass   = XMPP sender password
+xmpp_server = XMPP server
+
+CAMERA
+camera_identifier
+mjpeg = HTTP URL for mjpeg stream can be found in the web-interface of the network camra. For example http://IP/video/mjpg.cgi for DCS-936L or http://IP/video1.mjpeg for DCS-2670. Disabling authentication is only possible for the DCS-936L, otherwise use http://user:password@IP.
+audio = RTSP URL for AAC audio stream can also be found in the web-interface. For example rtsp://IP/play1.sdp for DCS-936L or rtsp://IP/live2.sdp for DCS-2670.
+read  = Byte to read from MJPEG stream. Will be adapted by the program to result in 20 seconds of video.
+fps   =	Framerate in frames per seconds as defined in the network camera web-interface for the selected stream.
+
+SENSOR
+sensor_uid	
+cam   = camera_identifier
+ip    = brick IP
+vers  = Motion Detector Bricklet Version 1 or 2
+sensi = Sensitivity for motion detection (only version 2)

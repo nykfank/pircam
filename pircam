@@ -80,7 +80,43 @@ def extract_first_jpeg(mjpeg_data): # Exctract first image from MJPEG
 def upload_to_webserver(fn, CAMID):
 	cmd = 'rsync', fn, '%s:%s/%s/' % (config['webserver'], config['data_dir'], CAMID)
 	log_and_run(cmd)
- 
+
+def timeFormat(x):
+    x = os.path.splitext(os.path.basename(x))[0]
+    if len(x) < 15: return(x)
+    if len(x) > 15: x = x[:15]
+    return '%s%s%s%s-%s%s-%s%s%s%s%s:%s%s:%s%s' % tuple(x)
+
+def generate_index_page():
+	ftup = []
+	for CAMID in cameras.keys():
+		inPath = '%s/%s' % (config['data_dir'], CAMID)
+		ftup += [(fn, '%s/%s' % (inPath, fn)) for fn in os.listdir(inPath)]
+	ftup.sort()
+	files = map(lambda x : x[1], ftup)
+	image_files = filter(lambda x : x.endswith('jpg'), files)
+	elemlist = []
+	for n, f in enumerate(reversed(image_files)):
+		bild_url = f.replace(config['data_dir'], '')
+		video = f.replace('jpg', 'ogg').replace(config['data_dir'] + '/', '')
+		elem = "{src: '%s', " % bild_url
+		elem += 'w: %s, h: %s, ' % (config['size_x'], config['size_y'])
+		elem += "title: '%s', " % timeFormat(f)
+		elem += "video: '%s', " % video
+		elem += "pid: '%s'}" % os.path.splitext(os.path.basename(f))[0]
+		elemlist.append(elem)
+	elemlist2 = elemlist[:int(config['numLast'])]
+	elemstr = ',\n'.join(elemlist2)
+	photoswipe_element = open(config['elementPath']).read()
+	photoswipe_html_header = open(config['headerPath']).read()
+	photoswipe_script = open(config['scriptPath']).read()
+	html = photoswipe_html_header + photoswipe_element
+	html += photoswipe_script % elemstr
+	html += '</body></html>\n'
+	indexPath = '%s/%s/pircam.html' % (config['data_dir'], config['base_cam'])
+	open(indexPath, 'w').write(html)
+	logg('%s contains %d videos' % (indexPath, len(elemlist2)))
+
 def run_converter(CAMID):
 	global video_queue, audio_queue, cameras
 	local_video_queue, local_audio_queue = list(video_queue[CAMID]), list(audio_queue[CAMID]) # Copy queue
@@ -119,8 +155,8 @@ def run_converter(CAMID):
 		upload_to_webserver(jfn, CAMID)
 	cameras[CAMID]['read'] = int(int(cameras[CAMID]['read']) * int(config['rec_sec']) / video_sec)
 	logg('New MJPEG read length for %s: %2.2f MB' % (CAMID, cameras[CAMID]['read']/1024.0/1024.0))
-	log_and_run(['netcam_index_new']) # rewrite this
-	upload_to_webserver('%s/%s/netcam.html' % (config['data_dir'], config['base_cam']), config['base_cam'])
+	generate_index_page()
+	upload_to_webserver('%s/%s/pircam.html' % (config['data_dir'], config['base_cam']), config['base_cam'])
 	upload_to_webserver(config['logfile'], config['base_cam'])
 	logg('Converter thread for %s finished' % CAMID)
  
