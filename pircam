@@ -100,10 +100,8 @@ def index_element(fpath):
 	return "{src:'%s', w:%s, h:%s, title:'%s', video:'%s', pid:'%s'}" % (src, w, h, title, video, pid)
 
 def generate_index_page():
-	ftup = []
-	for CAMID in cameras.keys():
-		inPath = '%s/%s' % (config['data_dir'], CAMID)
-		ftup += [ (fn, '%s/%s' % (inPath, fn)) for fn in os.listdir(inPath) ]
+	inPath = lambda x : '%s/%s' % (config['data_dir'], x)
+	ftup = [ (fn, '%s/%s' % (inPath(CAMID), fn)) for CAMID in cameras.keys() for fn in os.listdir(inPath(CAMID)) ]
 	image_paths =  [ fpath for (fn, fpath) in sorted(ftup) if fn.endswith('jpg') ]
 	elemlist = [ index_element(fpath) for fpath in reversed(image_paths) ]
 	elemlist2 = elemlist[:int(config['numLast'])]
