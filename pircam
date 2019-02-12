@@ -110,7 +110,7 @@ def generate_index_page():
 	photoswipe_script = open(config['scriptPath']).read()
 	photoswipe_script = photoswipe_script % ',\n'.join(elemlist2)
 	indexPath = '%s/%s/pircam.html' % (config['data_dir'], config['base_cam'])
-	open(indexPath, 'w').write(html)
+	open(indexPath, 'w').write(photoswipe_script)
 	logg('%s contains %d videos' % (indexPath, len(elemlist2)))
 
 def run_converter(CAMID):
