@@ -108,10 +108,8 @@ def generate_index_page():
 		elem += "pid: '%s'}" % os.path.splitext(os.path.basename(fpath))[0]
 		elemlist.append(elem)
 	elemlist2 = elemlist[:int(config['numLast'])]
-	html = open(config['headerPath']).read() + open(config['elementPath']).read()
 	photoswipe_script = open(config['scriptPath']).read()
-	html += photoswipe_script % ',\n'.join(elemlist2)
-	html += '</body></html>\n'
+	photoswipe_script = photoswipe_script % ',\n'.join(elemlist2)
 	indexPath = '%s/%s/pircam.html' % (config['data_dir'], config['base_cam'])
 	open(indexPath, 'w').write(html)
 	logg('%s contains %d videos' % (indexPath, len(elemlist2)))
