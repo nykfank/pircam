@@ -73,6 +73,7 @@ def download_audio(CAMID):
  
 def extract_first_jpeg(mjpeg_data): # Exctract first image from MJPEG
 	header = mjpeg_data.split('\r\n\r\n')[0]
+	if not 'Length: ' in header: return ''
 	content_length = int(header.split('Length: ')[1].split('\r\n')[0])
 	data_start = len(header) + 4
 	return mjpeg_data[data_start:(data_start + content_length)]
@@ -132,6 +133,9 @@ def run_converter(CAMID):
 		mjpeg_data = open(vfn).read()
 		nb_frames = mjpeg_data.count('image/jpeg')
 		jpeg_data = extract_first_jpeg(mjpeg_data)
+		if len(jpeg_data) == 0: 
+			logg('Broken video for %s' % CAMID)
+			continue
 		open(jfn, 'w').write(jpeg_data)
 		logg('Image of %2.2f KB saved to %s' % (len(jpeg_data)/1024.0, jfn))
 		video_sec = nb_frames / float(fps)
