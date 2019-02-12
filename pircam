@@ -85,28 +85,27 @@ def upload_to_webserver(fn, CAMID):
 	cmd = 'rsync', fn, '%s:%s/%s/' % (config['webserver'], config['data_dir'], CAMID)
 	log_and_run(cmd)
 
+def filebase(x):
+	return os.path.splitext(os.path.basename(x))[0]
+
 def timeFormat(x):
-    x = os.path.splitext(os.path.basename(x))[0]
-    if len(x) < 15: return(x)
-    if len(x) > 15: x = x[:15]
-    return '%s%s%s%s-%s%s-%s%s%s%s%s:%s%s:%s%s' % tuple(x)
+    return time.strftime('%Y-%m-%d %H:%M:%s', time.strptime(filebase(x), "%Y%m%d_%H%M%S"))
+
+def index_element(fpath):
+	src = fpath.replace(config['data_dir'], '')
+	w, h = config['size_x'], config['size_y']
+	title = timeFormat(fpath)
+	video = fpath.replace('jpg', 'ogg').replace(config['data_dir'] + '/', '')
+	pid = filebase(fpath)
+	return "{src:'%s', w:%s, h:%s, title:'%s', video:'%s', pid:'%s'}" % (src, w, h, title, video, pid)
 
 def generate_index_page():
 	ftup = []
 	for CAMID in cameras.keys():
 		inPath = '%s/%s' % (config['data_dir'], CAMID)
-		ftup += [(fn, '%s/%s' % (inPath, fn)) for fn in os.listdir(inPath)]
+		ftup += [ (fn, '%s/%s' % (inPath, fn)) for fn in os.listdir(inPath) ]
 	image_paths =  [ fpath for (fn, fpath) in sorted(ftup) if fn.endswith('jpg') ]
-	elemlist = []
-	for fpath in reversed(image_paths):
-		bild_url = fpath.replace(config['data_dir'], '')
-		video = fpath.replace('jpg', 'ogg').replace(config['data_dir'] + '/', '')
-		elem = "{src: '%s', " % bild_url
-		elem += 'w: %s, h: %s, ' % (config['size_x'], config['size_y'])
-		elem += "title: '%s', " % timeFormat(fpath)
-		elem += "video: '%s', " % video
-		elem += "pid: '%s'}" % os.path.splitext(os.path.basename(fpath))[0]
-		elemlist.append(elem)
+	elemlist = [ index_element(fpath) for fpath in reversed(image_paths) ]
 	elemlist2 = elemlist[:int(config['numLast'])]
 	photoswipe_script = open(config['scriptPath']).read()
 	photoswipe_script = photoswipe_script % ',\n'.join(elemlist2)
@@ -119,13 +118,12 @@ def run_converter(CAMID):
 	local_video_queue, local_audio_queue = list(video_queue[CAMID]), list(audio_queue[CAMID]) # Copy queue
 	video_queue[CAMID], audio_queue[CAMID] = [], [] # Empty queue
 	logg('Converter for %s started: %d video, %d audio files' % (CAMID, len(local_video_queue), len(local_audio_queue)))
-	base = lambda x : os.path.splitext(os.path.basename(x))[0]
 	unixtime = lambda x : time.mktime(time.strptime(x, "%Y%m%d_%H%M%S"))
-	audio_base = [base(i) for i in local_audio_queue]
+	audio_base = [ filebase(i) for i in local_audio_queue ]
 	fps = int(cameras[CAMID]['fps'])
 	for vfn in local_video_queue:
-		jfn = '%s/%s/%s.jpg' % (config['data_dir'], CAMID, base(vfn))
-		ofn = '%s/%s/%s.ogg' % (config['data_dir'], CAMID, base(vfn))
+		jfn = '%s/%s/%s.jpg' % (config['data_dir'], CAMID, filebase(vfn))
+		ofn = '%s/%s/%s.ogg' % (config['data_dir'], CAMID, filebase(vfn))
 		mjpeg_data = open(vfn).read()
 		nb_frames = mjpeg_data.count('image/jpeg')
 		jpeg_data = extract_first_jpeg(mjpeg_data)
@@ -140,7 +138,7 @@ def run_converter(CAMID):
 			logg('Truncated video for %s' % CAMID)
 			continue
 		if local_audio_queue:
-			video_time = unixtime(base(vfn))
+			video_time = unixtime(filebase(vfn))
 			audio_diff = [abs(unixtime(i) - video_time) for i in audio_base]
 			afn = local_audio_queue[audio_diff.index(min(audio_diff))]			
 			cmd = 'ffmpeg', '-hide_banner', '-y', '-r', str(fps), '-i', vfn, '-i', afn, '-codec:v', 'libtheora', '-qscale:v', '7', ofn
