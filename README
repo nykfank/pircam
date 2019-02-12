@@ -48,8 +48,6 @@ sensi = Sensitivity for motion detection (only version 2)
 Dependencies
 
 On debian install the following packages:
-# apt install ffmpeg ejabberd python-xmpp
-And download the python tinkerforge bindings from
-https://www.tinkerforge.com/de/doc/Downloads.html
-Install using "python setup.py install"
-Or "pip install tinkerforge" using the python-pip package.
+# apt install ffmpeg ejabberd python-xmpp python-pip
+# pip install tinkerforge
+
