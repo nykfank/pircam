@@ -96,26 +96,21 @@ def generate_index_page():
 	for CAMID in cameras.keys():
 		inPath = '%s/%s' % (config['data_dir'], CAMID)
 		ftup += [(fn, '%s/%s' % (inPath, fn)) for fn in os.listdir(inPath)]
-	ftup.sort()
-	files = map(lambda x : x[1], ftup)
-	image_files = filter(lambda x : x.endswith('jpg'), files)
+	image_files =  [ fpath for (fn, fpath) in sorted(ftup) if fn.endswith('jpg') ]
 	elemlist = []
-	for n, f in enumerate(reversed(image_files)):
-		bild_url = f.replace(config['data_dir'], '')
-		video = f.replace('jpg', 'ogg').replace(config['data_dir'] + '/', '')
+	for n, fpath in enumerate(reversed(image_files)):
+		bild_url = fpath.replace(config['data_dir'], '')
+		video = fpath.replace('jpg', 'ogg').replace(config['data_dir'] + '/', '')
 		elem = "{src: '%s', " % bild_url
 		elem += 'w: %s, h: %s, ' % (config['size_x'], config['size_y'])
-		elem += "title: '%s', " % timeFormat(f)
+		elem += "title: '%s', " % timeFormat(fpath)
 		elem += "video: '%s', " % video
-		elem += "pid: '%s'}" % os.path.splitext(os.path.basename(f))[0]
+		elem += "pid: '%s'}" % os.path.splitext(os.path.basename(fpath))[0]
 		elemlist.append(elem)
 	elemlist2 = elemlist[:int(config['numLast'])]
-	elemstr = ',\n'.join(elemlist2)
-	photoswipe_element = open(config['elementPath']).read()
-	photoswipe_html_header = open(config['headerPath']).read()
+	html = open(config['headerPath']).read() + open(config['elementPath']).read()
 	photoswipe_script = open(config['scriptPath']).read()
-	html = photoswipe_html_header + photoswipe_element
-	html += photoswipe_script % elemstr
+	html += photoswipe_script % ',\n'.join(elemlist2)
 	html += '</body></html>\n'
 	indexPath = '%s/%s/pircam.html' % (config['data_dir'], config['base_cam'])
 	open(indexPath, 'w').write(html)
