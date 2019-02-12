@@ -89,7 +89,7 @@ def filebase(x):
 	return os.path.splitext(os.path.basename(x))[0]
 
 def timeFormat(x):
-    return time.strftime('%Y-%m-%d %H:%M:%s', time.strptime(filebase(x), "%Y%m%d_%H%M%S"))
+    return time.strftime('%Y-%m-%d %H:%M:%S', time.strptime(filebase(x), "%Y%m%d_%H%M%S"))
 
 def index_element(fpath):
 	src = fpath.replace(config['data_dir'], '')
