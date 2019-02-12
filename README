@@ -35,3 +35,13 @@ cam   = camera_identifier
 ip    = brick IP
 vers  = Motion Detector Bricklet Version 1 or 2
 sensi = Sensitivity for motion detection (only version 2)
+
+
+Dependencies
+
+On debian install the following packages:
+# apt install ffmpeg ejabberd python-xmpp
+And download the python tinkerforge bindings from
+https://www.tinkerforge.com/de/doc/Downloads.html
+Install using "python setup.py install"
+Or "pip install tinkerforge" using the python-pip package.
