@@ -95,7 +95,7 @@ def index_element(fpath):
 	src = fpath.replace(config['data_dir'], '')
 	w, h = config['size_x'], config['size_y']
 	title = timeFormat(fpath)
-	video = fpath.replace('jpg', 'ogg').replace(config['data_dir'] + '/', '')
+	video = src.replace('jpg', 'ogg').strip('/')
 	pid = filebase(fpath)
 	return "{src:'%s', w:%s, h:%s, title:'%s', video:'%s', pid:'%s'}" % (src, w, h, title, video, pid)
 
