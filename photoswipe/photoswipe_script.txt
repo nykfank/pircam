@@ -78,3 +78,6 @@ function add_cart() {
 function back_home() {window.open(window.location.pathname, "_self", false)}
 gallery.init();
 </script>
+
+</body></html>
+
