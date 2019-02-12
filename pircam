@@ -74,8 +74,11 @@ def download_audio(CAMID):
 def extract_first_jpeg(mjpeg_data): # Exctract first image from MJPEG
 	header = mjpeg_data.split('\r\n\r\n')[0]
 	if not 'Length: ' in header: return ''
-	content_length = int(header.split('Length: ')[1].split('\r\n')[0])
+	content_length = header.split('Length: ')[1].split('\r\n')[0].strip()
+	try: content_length = int(content_length)
+	except: return ''
 	data_start = len(header) + 4
+	if len(mjpeg_data) <= data_start + content_length: return ''
 	return mjpeg_data[data_start:(data_start + content_length)]
  
 def upload_to_webserver(fn, CAMID):
