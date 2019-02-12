@@ -96,9 +96,9 @@ def generate_index_page():
 	for CAMID in cameras.keys():
 		inPath = '%s/%s' % (config['data_dir'], CAMID)
 		ftup += [(fn, '%s/%s' % (inPath, fn)) for fn in os.listdir(inPath)]
-	image_files =  [ fpath for (fn, fpath) in sorted(ftup) if fn.endswith('jpg') ]
+	image_paths =  [ fpath for (fn, fpath) in sorted(ftup) if fn.endswith('jpg') ]
 	elemlist = []
-	for n, fpath in enumerate(reversed(image_files)):
+	for fpath in reversed(image_paths):
 		bild_url = fpath.replace(config['data_dir'], '')
 		video = fpath.replace('jpg', 'ogg').replace(config['data_dir'] + '/', '')
 		elem = "{src: '%s', " % bild_url
