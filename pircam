@@ -19,19 +19,19 @@ sensorAPI = {} # Motion detector dictionary
 cbFuns = {} # Callback function dictionary
 ipcon = {} # TCP/IP connections
 
-def load_config(fn, sel_mode):
-	cdict, cmode = {}, ''
+def load_config(fn, section):
+	cdict, current_section = {}, ''
 	for i in open(fn):
 		if not i.strip(): continue
 		isp = i.strip().split('=')
 		if len(isp) == 1:
 			title = isp[0].strip()
-			if title in ['GLOBAL', 'CAMERA', 'SENSOR']: cmode = title
+			if title in ['GLOBAL', 'CAMERA', 'SENSOR']: current_section = title
 			else: device = title
-		if cmode != sel_mode: continue
+		if current_section != section: continue
 		if len(isp) == 2:
 			key, value = isp[0].strip(), isp[1].strip()
-			if cmode == 'GLOBAL': 
+			if current_section == 'GLOBAL': 
 				cdict[key] = value
 			else:
 				if not cdict.has_key(device): cdict[device] = {}
