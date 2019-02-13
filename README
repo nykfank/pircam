@@ -1,6 +1,4 @@
-The motion detection capabilities of D-Link DCS-936L and DCS-2670 network cameras in outdoor settings are nice in principle, but fog, snow or wind cause almost permanent false positives. 
-PIR motion sensors solve this issue by only detecing motion of warm objects. 
-Sensors from Tinkerforge relay the motion detection signal by TCP/IP. 
+The motion detection capabilities of D-Link DCS-936L and DCS-2670 network cameras in outdoor settings are nice in principle, but fog, snow or wind cause almost permanent false positives. PIR motion sensors solve this issue by only detecing motion of warm objects. Sensors from Tinkerforge were used, because they relay motion detection signals by TCP/IP. 
 Recording video by RTSP, triggered by the PIR motion detector, has a delay of at least 3 seconds before recording starts on both cameras.
 So it is not very useful because whatever moved may already have left by then. 
 The solution is to use MJPEG recording, which starts almost immediately. 
