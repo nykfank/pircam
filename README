@@ -55,5 +55,5 @@ On debian install the following packages:
 
 Webserver
 # apt install lighttpd
-- Symlink putput directories (containing the produced videos) into webroot
+- Symlink output directories (containing the produced videos) into webroot
 - Copy contents of photoswipe directory to webroot
