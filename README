@@ -1,14 +1,22 @@
-I evaluated the motion detection capabilities of D-Link DCS-936L and DCS-2670 network cameras in outdoor settings. While nice in principle, fog, snow or wind cause almost permanent false positives. PIR motion sensors solve this issue by only detecing motion of warm objects. I used the sensors from Tinkerforge, which relay the motion detection signal by TCP/IP. 
-I wanted to record video by RTSP triggered by the PIR motion detector. But both cameras have a delay of at least 3 seconds before recording starts. So it is not very useful because whatever moved may already have left by then. The solution is to use MJPEG recording, which starts almost immediately. Audio is streamed by RTSP separately. The delay for RTSP audio is not as noticable as for video, because it is inherent to the h264 implementation of these cameras. 
+The motion detection capabilities of D-Link DCS-936L and DCS-2670 network cameras in outdoor settings are nice in principle, but fog, snow or wind cause almost permanent false positives. 
+PIR motion sensors solve this issue by only detecing motion of warm objects. 
+Sensors from Tinkerforge relay the motion detection signal by TCP/IP. 
+Recording video by RTSP, triggered by the PIR motion detector, has a delay of at least 3 seconds before recording starts on both cameras.
+So it is not very useful because whatever moved may already have left by then. 
+The solution is to use MJPEG recording, which starts almost immediately. 
+Audio is streamed by RTSP separately. The delay for RTSP audio is not as noticable as for video, because it is inherent to the h264 implementation of these cameras. 
 
-This python program performs motion detections sensor triggered capture and combination of MJPEG video and audio from D-Link network cameras, as well as notification by the xmpp instant messaging protocol. I tested with ejabberd running on the same machine. It combines and converts MJPEG video and AAC audio to the ogg vorbis/theora format using ffmpeg and uploads it to a separate webserver by rsync.
+This python program performs motion detections sensor triggered capture and combination of MJPEG video and audio from D-Link network cameras, as well as notification by the xmpp instant messaging protocol. 
+It is tested with ejabberd running on the same machine. 
+It combines and converts MJPEG video and AAC audio to the ogg vorbis/theora format using ffmpeg and uploads it to a separate webserver by rsync.
 
 The length of the video is specified by the rec_sec variable. For audio the desired length can be specified by RTSP. 
 But the MJPEG stream has to be downloaded by size, so an initial guess is made.
 After the number of downloaded frames are counted, the MJPEG download size is corrected to result in the length specified by rec_sec.
-It's possible to have multiple motion sensors activating each camera and you can combine version 1 with version 2 motion detectors.
+It is possible to have multiple motion sensors activating each camera and you can combine version 1 with version 2 motion detectors.
 
-A simple web-interface based on photoswipe is generated as pircam.html, where you can browse though the still images by swiping on a mobile device or using the keyboard or mouse on a PC. Clicking on the shopping-cart links to the video. I used this for a web-shop and did not yet change the icon. I am using lighthttpd as web-server.
+A simple web-interface based on photoswipe is generated as pircam.html, where you can browse though the still images by swiping on a mobile device or using the keyboard or mouse on a PC.
+Clicking on the shopping-cart links to the video. 
 
 Options in the config file:
 
