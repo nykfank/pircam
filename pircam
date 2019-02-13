@@ -112,8 +112,8 @@ def index_element(fpath):
 def generate_index_page():
 	"""Generates HTML page for the numLast recorded videos with photoswipe user interface.""" 
 	inPath = lambda x : '%s/%s' % (config['data_dir'], x)
-	ftup = [ (fn, '%s/%s' % (inPath(CAMID), fn)) for CAMID in cameras.keys() for fn in os.listdir(inPath(CAMID)) ]
-	image_paths =  [ fpath for (fn, fpath) in sorted(ftup) if fn.endswith('jpg') ]
+	ftup = [ (fn, '%s/%s' % (inPath(c), fn)) for c in cameras.keys() for fn in os.listdir(inPath(c)) if fn.endswith('jpg') ]
+	image_paths =  [ fpath for (fn, fpath) in sorted(ftup) ]
 	elemlist = [ index_element(fpath) for fpath in reversed(image_paths) ]
 	photoswipe_script = open(config['scriptPath']).read() % ',\n'.join(elemlist[:int(config['numLast'])])
 	indexPath = '%s/%s/pircam.html' % (config['data_dir'], config['base_cam'])
