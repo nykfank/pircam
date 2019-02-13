@@ -48,10 +48,12 @@ ip    = brick IP
 vers  = Motion Detector Bricklet Version 1 or 2
 sensi = Sensitivity for motion detection (only version 2)
 
-
 Dependencies
-
 On debian install the following packages:
 # apt install ffmpeg ejabberd python-xmpp python-pip
 # pip install tinkerforge
 
+Webserver
+# apt install lighttpd
+- Symlink putput directories (containing the produced videos) into webroot
+- Copy contents of photoswipe directory to webroot
