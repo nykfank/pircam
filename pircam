@@ -214,31 +214,37 @@ def configure_motion_detector(uid):
 	sensorAPI[uid].register_callback(sensorAPI[uid].CALLBACK_MOTION_DETECTED, cbFuns[uid]) # Register callback function
 	logg('Callback for %s at %s to %s registered' % (uid, sensors[uid]['ip'], sensors[uid]['cam']))
 
+# Load configuration into dictionaries
 sensors = load_config(config_file, 'SENSOR')
 cameras = load_config(config_file, 'CAMERA')
 config  = load_config(config_file, 'GLOBAL')
 logg("%d sensors, %d cameras" % (len(sensors), len(cameras)))
+
+# Create IP connections to all bricks required by the sensors
 for uid in sensors.keys():
 	ip = sensors[uid]['ip']
 	if not ipcon.has_key(ip):
 		ipcon[ip] = IPConnection() # Create IP connection
 		ipcon[ip].connect(ip, int(config['brick_port'])) # Connect to brickd
-	if sensors[uid]['vers'] == '1': sensorAPI[uid] = BrickletMotionDetector(uid, ipcon[ip]) # Create device object
-	if sensors[uid]['vers'] == '2': sensorAPI[uid] = BrickletMotionDetectorV2(uid, ipcon[ip]) # Create device object
+	# Create motion detector sensor device object using the IP connection
+	if sensors[uid]['vers'] == '1': sensorAPI[uid] = BrickletMotionDetector(uid, ipcon[ip]) 
+	if sensors[uid]['vers'] == '2': sensorAPI[uid] = BrickletMotionDetectorV2(uid, ipcon[ip])
 	configure_motion_detector(uid)
 logg('IP connections: %d' % len(ipcon))
 
 reconfigure_time = time.time()
-while True:
-	threading.Event().wait(int(config['sleep_sec']))
+while True: # Main loop
+	threading.Event().wait(int(config['sleep_sec'])) # Sleep, but wake for events.
+	# Start convert thread per camera, if there are videos queued and system is idle.
 	for CAMID in cameras.keys():
-		if not video_queue.has_key(CAMID): continue
+		if not video_queue.has_key(CAMID): continue 
 		if len(video_queue[CAMID]) == 0: continue
 		if is_idle() or len(video_queue[CAMID]) > int(config['max_queue']):
 			current_convert_thread = threading.Thread(target=run_converter, args=[CAMID])
 			current_convert_thread.start()
 			break
-	if is_idle() and os.path.isfile(config['stop_file']): break
+	if is_idle() and os.path.isfile(config['stop_file']): break # Terminate
+	# Check for bricklet reset and reconfigure if needed (status LED on).
 	if reconfigure_time + int(config['reconf_sec']) < time.time():
 		for uid in sensors.keys():
 			if sensorAPI[uid].get_status_led_config() > 0:
