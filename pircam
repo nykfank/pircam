@@ -115,12 +115,9 @@ def generate_index_page():
 	ftup = [ (fn, '%s/%s' % (inPath(CAMID), fn)) for CAMID in cameras.keys() for fn in os.listdir(inPath(CAMID)) ]
 	image_paths =  [ fpath for (fn, fpath) in sorted(ftup) if fn.endswith('jpg') ]
 	elemlist = [ index_element(fpath) for fpath in reversed(image_paths) ]
-	elemlist2 = elemlist[:int(config['numLast'])]
-	photoswipe_script = open(config['scriptPath']).read()
-	photoswipe_script = photoswipe_script % ',\n'.join(elemlist2)
+	photoswipe_script = open(config['scriptPath']).read() % ',\n'.join(elemlist[:int(config['numLast'])])
 	indexPath = '%s/%s/pircam.html' % (config['data_dir'], config['base_cam'])
 	open(indexPath, 'w').write(photoswipe_script)
-	logg('%s contains %d videos' % (indexPath, len(elemlist2)))
 
 def run_converter(CAMID):
 	"""Matches audio to video and combines using ffmpeg, also comnverting to ogg theora/vorbis. 
