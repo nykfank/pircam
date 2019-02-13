@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <title>pircam</title>
+    <meta name="author" content="Niklaus Fankhauser"/>
+    <meta http-equiv="expires" content="0"/>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width"/>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="/photoswipe.css"/> 
+    <link rel="stylesheet" href="/default-skin/default-skin.css"/>
+    <script src="/photoswipe.min.js" type="text/javascript"></script>
+    <script src="/photoswipe-ui-default.min.js" type="text/javascript"></script>
+</head>
+<body>
+<div class="pswp">
+    <div class="pswp__bg"></div>
+    <div class="pswp__scroll-wrap">
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+        <div class="pswp__ui pswp__ui--hidden">
+            <div class="pswp__top-bar">
+                <div class="pswp__counter"></div>
+                <button class="pswp__button pswp__button--share" title="Video"></button>
+                <button class="pswp__button pswp__button--close" title="Back to Start"></button>
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button> 
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                      <div class="pswp__preloader__cut">
+                        <div class="pswp__preloader__donut"></div>
+                      </div>
+                    </div>
+                </div>
+            </div>
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="pircam.js" type="text/javascript"></script>
+<script type="text/javascript">
+    var pswpElement = document.querySelectorAll('.pswp')[0];
+    var options = { 
+    	tapToToggleControls: false, 
+    	history: true, 
+    	galleryPIDs: true, 
+    	tapToClose: false,
+    	pinchToClose: false,
+    	clickToCloseNonZoomable: false,
+    	preload: [100,100],
+    	closeElClasses: []
+    };
+    var gallery = new PhotoSwipe( pswpElement, PhotoSwipeUI_Default, items, options);
+    gallery.options.escKey = false;
+    gallery.options.closeOnScroll = false;
+    gallery.options.closeOnVerticalDrag = false;
+
+    function add_cart() {
+    	var video_url = "/" + gallery.currItem.video;
+    	window.open(video_url, "_self", false);
+    }
+
+    function back_home() {window.open(window.location.pathname, "_self", false)}
+    gallery.init();
+</script>
+</body></html>

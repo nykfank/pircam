@@ -114,8 +114,8 @@ def generate_index_page():
 	ftup = [ (f, '%s/%s' % (path(c), f)) for c in cameras.keys() for f in os.listdir(path(c)) if f.endswith('jpg') ]
 	image_paths =  [ fpath for (fn, fpath) in sorted(ftup) ]
 	elemlist = [ index_element(fpath) for fpath in reversed(image_paths) ]
-	photoswipe_script = open(config['scriptPath']).read() % ',\n'.join(elemlist[:int(config['numLast'])])
-	indexPath = '%s/%s/pircam.html' % (config['data_dir'], config['base_cam'])
+	photoswipe_script = 'var items = [\n%s\n];\n' % ',\n'.join(elemlist[:int(config['numLast'])])
+	indexPath = '%s/%s/pircam.js' % (config['data_dir'], config['base_cam'])
 	open(indexPath, 'w').write(photoswipe_script)
 
 def run_converter(CAMID):
@@ -161,7 +161,7 @@ def run_converter(CAMID):
 	cameras[CAMID]['read'] = int(int(cameras[CAMID]['read']) * int(config['rec_sec']) / video_sec)
 	logg('New MJPEG read length for %s: %2.2f MB' % (CAMID, cameras[CAMID]['read']/1024.0/1024.0))
 	generate_index_page()
-	upload_to_webserver('%s/%s/pircam.html' % (config['data_dir'], config['base_cam']), config['base_cam'])
+	upload_to_webserver('%s/%s/pircam.js' % (config['data_dir'], config['base_cam']), config['base_cam'])
 	upload_to_webserver(config['logfile'], config['base_cam'])
 	logg('Converter thread for %s finished' % CAMID)
  

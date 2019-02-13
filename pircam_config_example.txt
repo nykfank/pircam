@@ -14,7 +14,6 @@ xmpp_to     = user@example.org
 xmpp_from   = pircam@example.org
 xmpp_pass   = password
 xmpp_server = example.org
-scriptPath  = /opt/photoswipe_script.txt
 size_x      = 1280
 size_y      = 720
 numLast     = 150
@@ -34,7 +33,7 @@ netcam3
 mjpeg = http://admin:password@192.168.1.138/video1.mjpeg
 audio = rtsp://192.168.1.138/live2.sdp
 read  = 9000000
-fps   = 7
+fps   = 4
 
 SENSOR
 Ek8	
