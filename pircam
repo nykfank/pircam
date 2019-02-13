@@ -86,9 +86,9 @@ def extract_first_jpeg(mjpeg_data):
 	if len(mjpeg_data) <= data_start + content_length: return ''
 	return mjpeg_data[data_start:(data_start + content_length)]
  
-def upload_to_webserver(fn, CAMID):
-	"""Run a rsync command to upload a file."""
-	cmd = 'rsync', fn, '%s:%s/%s/' % (config['webserver'], config['data_dir'], CAMID)
+def upload_to_webserver(fn, remote_path):
+	"""Run a rsync command to upload a file to a path on the webserver."""
+	cmd = 'rsync', fn, '%s:%s/' % (config['webserver'], remote_path)
 	log_and_run(cmd)
 
 def filebase(x):
@@ -115,8 +115,8 @@ def generate_index_page():
 	image_paths =  [ fpath for (fn, fpath) in sorted(ftup) ]
 	elemlist = [ index_element(fpath) for fpath in reversed(image_paths) ]
 	photoswipe_script = 'var items = [\n%s\n];\n' % ',\n'.join(elemlist[:int(config['numLast'])])
-	indexPath = '%s/%s/pircam.js' % (config['data_dir'], config['base_cam'])
-	open(indexPath, 'w').write(photoswipe_script)
+	scriptPath = '%s/pircam.js' % config['data_dir']
+	open(scriptPath, 'w').write(photoswipe_script)
 
 def run_converter(CAMID):
 	"""Matches audio to video and combines using ffmpeg, also comnverting to ogg theora/vorbis. 
@@ -156,13 +156,13 @@ def run_converter(CAMID):
 			logg('Failed to create %s' % ofn)
 			continue
 		logg('Video of %2.2f MB created at %s' % (os.stat(ofn).st_size/1024.0/1024.0, ofn))
-		upload_to_webserver(ofn, CAMID)
-		upload_to_webserver(jfn, CAMID)
+		upload_to_webserver(ofn, '%s/%s' % (config['data_dir'], CAMID))
+		upload_to_webserver(jfn, '%s/%s' % (config['data_dir'], CAMID))
 	cameras[CAMID]['read'] = int(int(cameras[CAMID]['read']) * int(config['rec_sec']) / video_sec)
 	logg('New MJPEG read length for %s: %2.2f MB' % (CAMID, cameras[CAMID]['read']/1024.0/1024.0))
 	generate_index_page()
-	upload_to_webserver('%s/%s/pircam.js' % (config['data_dir'], config['base_cam']), config['base_cam'])
-	upload_to_webserver(config['logfile'], config['base_cam'])
+	upload_to_webserver('%s/pircam.js' % config['data_dir'], config['webRoot'])
+	upload_to_webserver(config['logfile'], config['webRoot'])
 	logg('Converter thread for %s finished' % CAMID)
  
 def send_jabber(CAMID):
