@@ -1,10 +1,9 @@
 The motion detection capabilities of D-Link DCS-936L and DCS-2670 network cameras in outdoor settings are nice in principle, but fog, snow or wind cause almost permanent false positives. PIR motion sensors solve this issue by only detecing motion of warm objects. Sensors from Tinkerforge were used, because they relay motion detection signals by TCP/IP. 
-Recording video by RTSP, triggered by the PIR motion detector, has a delay of at least 3 seconds before recording starts on both cameras.
-So it is not very useful because whatever moved may already have left by then. 
+Recording video by RTSP, triggered by the PIR motion detector, has a delay of at least 3 seconds before recording starts on both cameras. So it is not very useful because whatever moved may already have left by then. 
 The solution is to use MJPEG recording, which starts almost immediately. 
 Audio is streamed by RTSP separately. The delay for RTSP audio is not as noticable as for video, because it is inherent to the h264 implementation of these cameras. 
 
-This python program performs motion detections sensor triggered capture and combination of MJPEG video and audio from D-Link network cameras, as well as notification by the xmpp instant messaging protocol. 
+This python program runs as a daemon to performs motion detections sensor triggered capture and combination of MJPEG video and audio from D-Link network cameras, as well as notification by the xmpp instant messaging protocol. 
 It is tested with ejabberd running on the same machine. 
 It combines and converts MJPEG video and AAC audio to the ogg vorbis/theora format using ffmpeg and uploads it to a separate webserver by rsync.
 
@@ -13,7 +12,8 @@ But the MJPEG stream has to be downloaded by size, so an initial guess is made.
 After the number of downloaded frames are counted, the MJPEG download size is corrected to result in the length specified by rec_sec.
 It is possible to have multiple motion sensors activating each camera and you can combine version 1 with version 2 motion detectors.
 
-A simple web-interface based on photoswipe is generated as pircam.html, where you can browse though the still images by swiping on a mobile device or using the keyboard or mouse on a PC.
+A simple web-interface based on photoswipe (pircam.html) is updated with the latest events using the file pircam.js.
+It enables browsing though the still images by swiping on a mobile device or using the keyboard or mouse on a PC.
 Clicking on the shopping-cart links to the video. 
 
 Options in the config file:
@@ -23,7 +23,7 @@ logfile     = Path to file where log will be written to.
 stop_file   = If this file exists, the daemon stops.
 pause_file  = If this file exists, no recording is done, but motion still logged.
 data_dir    = Base directory for downloaded video and audio.
-base_cam    = Logfile and index will be uploaded there.
+webRoot     = Path on webserver to upload logfile and pircam.js and where content of photoswipe directory is
 brick_port  = Default tinkerforge port (4223)
 webserver   = .ssh/config name for webserver
 rec_sec     = Seconds to record.
@@ -64,3 +64,4 @@ Webserver
 # apt install lighttpd
 - Symlink output directories (containing the produced videos) into webroot
 - Copy contents of photoswipe directory to webroot
+- pircam will upload logfile and pircam.js to webroot, so pircam.html will display these images/videos.
