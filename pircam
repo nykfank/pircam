@@ -178,7 +178,8 @@ def send_jabber(CAMID):
 	mid = cl.send(xmpp.protocol.Message(config['xmpp_to'], CAMID))
 	logg('Jabber message id %s for %s sent' % (str(mid), CAMID))
  
-def cb_motion_detected(CAMID): # Callback function for motion detected callback
+def cb_motion_detected(CAMID):
+	"""Callback function for motion detection starts threads for video/audio download, if possible."""
 	global current_video_thread, current_audio_thread, audio_queue
 	if os.path.isfile(config['pause_file']):
 		logg('Motion %s, paused' % CAMID)
@@ -197,6 +198,7 @@ def cb_motion_detected(CAMID): # Callback function for motion detected callback
 	logg('Motion %s, audio thread started' % CAMID)
 
 def is_idle():
+	"""Returns True if no download or convert threads are running."""
 	for CAMID in cameras.keys():
 		if current_video_thread.has_key(CAMID) and current_video_thread[CAMID].isAlive(): return False
 		if current_audio_thread.has_key(CAMID) and current_audio_thread[CAMID].isAlive(): return False
@@ -204,8 +206,9 @@ def is_idle():
 	return True
  
 def configure_motion_detector(uid):
+	"""Turn off LED, set sensitivity and register motion detection callback function."""
 	global sensorAPI, cbFuns
-	sensorAPI[uid].set_status_led_config(0) # Turn off status LED
+	sensorAPI[uid].set_status_led_config(0) # Turn off status LED (is on after bricklet reset)
 	if sensors[uid]['vers'] == '2': sensorAPI[uid].set_sensitivity(sensors[uid]['sensi']) # Set sensitivity
 	cbFuns[uid] = lambda : cb_motion_detected(sensors[uid]['cam']) # Create callback function
 	sensorAPI[uid].register_callback(sensorAPI[uid].CALLBACK_MOTION_DETECTED, cbFuns[uid]) # Register callback function
