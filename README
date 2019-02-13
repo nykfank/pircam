@@ -43,7 +43,7 @@ CAMERA
 camera_identifier
 mjpeg = HTTP URL for mjpeg stream can be found in the web-interface of the network camra. 
 For example http://IP/video/mjpg.cgi for DCS-936L or http://IP/video1.mjpeg for DCS-2670. Disabling authentication is only possible for the DCS-936L, otherwise use http://user:password@IP.
-audio = RTSP URL for AAC audio stream can also be found in the web-interface. 
+audio = RTSP URL for AAC audio stream can also be found in the web-interface. None for no audio.
 For example rtsp://IP/play1.sdp for DCS-936L or rtsp://IP/live2.sdp for DCS-2670.
 read  = Byte to read from MJPEG stream. Will be adapted by the program to result in 20 seconds of video.
 fps   =	Framerate in frames per seconds as defined in the network camera web-interface for the selected stream.
