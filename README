@@ -6,6 +6,7 @@ This python program performs motion detections sensor triggered capture and comb
 The length of the video is specified by the rec_sec variable. For audio the desired length can be specified by RTSP. 
 But the MJPEG stream has to be downloaded by size, so an initial guess is made.
 After the number of downloaded frames are counted, the MJPEG download size is corrected to result in the length specified by rec_sec.
+It's possible to have multiple motion sensors activating each camera and you can combine version 1 with version 2 motion detectors.
 
 A simple web-interface based on photoswipe is generated as pircam.html, where you can browse though the still images by swiping on a mobile device or using the keyboard or mouse on a PC. Clicking on the shopping-cart links to the video. I used this for a web-shop and did not yet change the icon. I am using lighthttpd as web-server.
 
