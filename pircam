@@ -20,6 +20,7 @@ cbFuns = {} # Callback function dictionary
 ipcon = {} # TCP/IP connections
 
 def load_config(fn, section):
+	"""Load specified section of config file into dictionary."""
 	cdict, current_section = {}, ''
 	for i in open(fn):
 		if not i.strip(): continue
@@ -39,10 +40,12 @@ def load_config(fn, section):
 	return cdict
 
 def logg(x):
+	"""Writes message and formated timestamp to logfile."""
 	x = '%s: %s' % (time.strftime('%Y-%m-%d %H:%M:%S'), x)
 	open(config['logfile'], 'a').write(x + '\n')
  
 def download_mjpeg(CAMID):
+	"""Download specified size from MJPEG stream by HTTP using urllib and append filename to video-queue."""
 	global video_queue
 	ofn = '%s/%s_mjpeg/%s.mjpeg' % (config['data_dir'], CAMID, time.strftime('%Y%m%d_%H%M%S'))
 	try:
@@ -56,10 +59,12 @@ def download_mjpeg(CAMID):
 	logg('Downloaded %2.2f MB from %s to %s' % (len(stream)/1024.0/1024.0, CAMID, ofn))
  
 def log_and_run(cmd):
+	"""Run command using subprocess.call and only log in case of error."""
 	rcode = subprocess.call(cmd)
 	if rcode > 0: logg('%s (%d)' % (' '.join(cmd), rcode))
  
 def download_audio(CAMID):
+	"""Download AAC audio in a MP4 container from RTSP using ffmpeg and add filename to audio-queue."""
 	global audio_queue
 	ofn = '%s/%s_mp4/%s.mp4' % (config['data_dir'], CAMID, time.strftime('%Y%m%d_%H%M%S'))
 	cmd = 'ffmpeg', '-hide_banner', '-i', cameras[CAMID]['audio'], '-vn', '-acodec', 'copy', '-t', config['rec_sec'], ofn
@@ -71,7 +76,8 @@ def download_audio(CAMID):
 	audio_queue[CAMID].append(ofn)
 	logg('Downloaded %2.2f KB from %s to %s' % (os.stat(ofn).st_size/1024.0, CAMID, ofn))
  
-def extract_first_jpeg(mjpeg_data): # Exctract first image from MJPEG
+def extract_first_jpeg(mjpeg_data):
+	"""Exctracts first image from MJPEG stream."""
 	header = mjpeg_data.split('\r\n\r\n')[0]
 	if not 'Length: ' in header: return ''
 	content_length = header.split('Length: ')[1].split('\r\n')[0].strip()
@@ -82,16 +88,20 @@ def extract_first_jpeg(mjpeg_data): # Exctract first image from MJPEG
 	return mjpeg_data[data_start:(data_start + content_length)]
  
 def upload_to_webserver(fn, CAMID):
+	"""Run a rsync command to upload a file."""
 	cmd = 'rsync', fn, '%s:%s/%s/' % (config['webserver'], config['data_dir'], CAMID)
 	log_and_run(cmd)
 
 def filebase(x):
+	"""Returns filename without path and extension."""
 	return os.path.splitext(os.path.basename(x))[0]
 
 def timeFormat(x):
-    return time.strftime('%Y-%m-%d %H:%M:%S', time.strptime(filebase(x), "%Y%m%d_%H%M%S"))
+	"""Convert YYYYMMDD_HHMMSS to YYYY-MM-DD_HH:MM:SS"""
+	return time.strftime('%Y-%m-%d %H:%M:%S', time.strptime(filebase(x), "%Y%m%d_%H%M%S"))
 
 def index_element(fpath):
+	"""Generates variables required for an element in photoswipe."""
 	src = fpath.replace(config['data_dir'], '')
 	w, h = config['size_x'], config['size_y']
 	title = timeFormat(fpath)
@@ -100,6 +110,7 @@ def index_element(fpath):
 	return "{src:'%s', w:%s, h:%s, title:'%s', video:'%s', pid:'%s'}" % (src, w, h, title, video, pid)
 
 def generate_index_page():
+	"""Generates HTML page for the numLast recorded videos with photoswipe user interface.""" 
 	inPath = lambda x : '%s/%s' % (config['data_dir'], x)
 	ftup = [ (fn, '%s/%s' % (inPath(CAMID), fn)) for CAMID in cameras.keys() for fn in os.listdir(inPath(CAMID)) ]
 	image_paths =  [ fpath for (fn, fpath) in sorted(ftup) if fn.endswith('jpg') ]
@@ -112,6 +123,8 @@ def generate_index_page():
 	logg('%s contains %d videos' % (indexPath, len(elemlist2)))
 
 def run_converter(CAMID):
+	"""Matches audio to video and combines using ffmpeg, also comnverting to ogg theora/vorbis. 
+	Extracts first image, creates the index-page and uploads all to the webserver."""
 	global video_queue, audio_queue, cameras
 	local_video_queue, local_audio_queue = list(video_queue[CAMID]), list(audio_queue[CAMID]) # Copy queue
 	video_queue[CAMID], audio_queue[CAMID] = [], [] # Empty queue
@@ -157,6 +170,7 @@ def run_converter(CAMID):
 	logg('Converter thread for %s finished' % CAMID)
  
 def send_jabber(CAMID):
+	"""Sends a jabber message containing activated cam to the recipient specified in config."""
 	jid = xmpp.protocol.JID(config['xmpp_from'])
 	cl = xmpp.Client(config['xmpp_server'], debug=[])
 	if not cl.connect(use_srv=False): return
