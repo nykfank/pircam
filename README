@@ -47,6 +47,7 @@ audio = RTSP URL for AAC audio stream can also be found in the web-interface. No
 For example rtsp://IP/play1.sdp for DCS-936L or rtsp://IP/live2.sdp for DCS-2670.
 read  = Byte to read from MJPEG stream. Will be adapted by the program to result in 20 seconds of video.
 fps   =	Framerate in frames per seconds as defined in the network camera web-interface for the selected stream.
+sun   = HH:MM, HH:MM, ... minutes to ignore sensor because of sun - plant_moving_in_wind - sensor alignment
 
 SENSOR
 sensor_uid	
@@ -54,7 +55,6 @@ cam   = camera_identifier
 ip    = brick IP
 vers  = Motion Detector Bricklet Version 1 or 2
 sensi = Sensitivity for motion detection (only version 2)
-sun   = HH:MM, HH:MM, ... minutes to ignore sensor because of sun - plant_moving_in_wind - sensor alignment
 
 Dependencies
 On debian install the following packages:
