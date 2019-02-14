@@ -6,7 +6,7 @@ indir <- sprintf("/mnt/big/nick/cams/%s", camID)
 writeLines(sprintf("Movie directory: %s", indir))
 tempTextFile <- "/tmp/vidfiles.txt"
 sampleSize <- 50
-video <- data.table(datei = list.files(indir, pattern="mp4"))
+video <- data.table(datei = list.files(indir, pattern="ogg"))
 video[, zeit := as.POSIXct(sub("netcam", "", datei), tz="", "%Y%m%d_%H%M%S")]
 video[, stunde := as.numeric(format(zeit, "%H"))]
 video[, stunde := stunde + as.numeric(format(zeit, "%M")) / 60]
