@@ -54,6 +54,7 @@ cam   = camera_identifier
 ip    = brick IP
 vers  = Motion Detector Bricklet Version 1 or 2
 sensi = Sensitivity for motion detection (only version 2)
+sun   = HH:MM, HH:MM, ... minutes to ignore sensor because of sun - plant_moving_in_wind - sensor alignment
 
 Dependencies
 On debian install the following packages:
