@@ -181,6 +181,10 @@ def cb_motion_detected(CAMID):
 		logg('Motion %s, paused' % CAMID)
 		return
 	if current_video_thread.has_key(CAMID) and current_video_thread[CAMID].isAlive(): return
+	if cameras[CAMID].has_key('sun'):
+		if time.strftime("%H:%M") in [ m.strip() for m in cameras[CAMID]['sun'].split(',') ]:
+			logg('Motion %s, sun' % CAMID)
+			return
 	current_video_thread[CAMID] = threading.Thread(target=download_mjpeg, args=[CAMID])
 	current_video_thread[CAMID].start()
 	logg('Motion %s, video thread started' % CAMID)
