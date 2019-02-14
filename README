@@ -62,7 +62,7 @@ On debian install the following packages:
 # pip install tinkerforge
 
 Webserver
-# apt install lighttpd
+# apt install lighttpd certbot
 - Symlink output directories (containing the produced videos) into webroot
 - Copy contents of photoswipe directory to webroot
 - pircam will upload logfile and pircam.js to webroot, so pircam.html will display these images/videos.
