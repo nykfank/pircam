@@ -71,7 +71,7 @@ Webserver
 - Use lighttpd_example.conf to only serve https and create /etc/lighttpd/lighttpdpassword with one username:password per line
 - pircam will upload logfile and pircam.js to webroot, so pircam.html will display these images/videos.
 
-Let's Encrypt Certificate
+Lets Encrypt Certificate
 # certbot certonly
 - Enter email address, hostname of webserver and use the standalone webserver method 
 - Create daily cronjob:
