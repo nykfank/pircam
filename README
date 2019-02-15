@@ -56,6 +56,9 @@ ip    = brick IP
 vers  = Motion Detector Bricklet Version 1 or 2
 sensi = Sensitivity for motion detection (only version 2)
 
+--- End of config file description section.
+
+
 Dependencies
 On debian install the following packages:
 # apt install ffmpeg ejabberd python-xmpp python-pip
@@ -65,4 +68,16 @@ Webserver
 # apt install lighttpd certbot
 - Symlink output directories (containing the produced videos) into webroot
 - Copy contents of photoswipe directory to webroot
+- Use lighttpd_example.conf to only serve https and create /etc/lighttpd/lighttpdpassword with one username:password per line
 - pircam will upload logfile and pircam.js to webroot, so pircam.html will display these images/videos.
+
+Let's Encrypt Certificate
+# certbot certonly
+- Enter email address, hostname of webserver and use the standalone webserver method 
+- Create daily cronjob:
+# certbot renew
+# cat /etc/letsencrypt/live/example.org/cert.pem /etc/letsencrypt/live/example.org/privkey.pem >/etc/letsencrypt/live/example.org/web.pem
+# service lighttpd restart (needed or will it reload the cert at some point anyway?)
+
+Recommended Android XMPP client: Conversations from F-Droid
+Alternative: Xabber also works, but not perfect.
