@@ -185,4 +185,4 @@ for uid in sensors.keys():
 	print 'Sensor %s: OK' % uid
 print('IP connections: %d' % len(ipcon))
 for ip in ipcon.keys(): ipcon[ip].disconnect()
-
+print 'All tests OK!'
