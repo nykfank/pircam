@@ -33,7 +33,7 @@ def load_config(fn, section):
 				cdict[device][key] = value
 	return cdict
 
-def extract_first_jpeg(mjpeg_data):
+def extract_first_jpeg(mjpeg_data): # TODO
 	"""Exctracts first image from MJPEG stream."""
 	header = mjpeg_data.split('\r\n\r\n')[0]
 	if not 'Length: ' in header: return ''
@@ -44,7 +44,7 @@ def extract_first_jpeg(mjpeg_data):
 	if len(mjpeg_data) <= data_start + content_length: return ''
 	return mjpeg_data[data_start:(data_start + content_length)]
  
-def upload_to_webserver(fn, remote_path):
+def upload_to_webserver(fn, remote_path): # TODO
 	"""Run a rsync command to upload a file to a path on the webserver."""
 	cmd = 'rsync', fn, '%s:%s/' % (config['webserver'], remote_path)
 	log_and_run(cmd)
@@ -183,6 +183,6 @@ for uid in sensors.keys():
 	if sensors[uid]['vers'] == '2': sensorAPI[uid] = BrickletMotionDetectorV2(uid, ipcon[ip])
 	configure_motion_detector(uid)
 	print 'Sensor %s: OK' % uid
-logg('IP connections: %d' % len(ipcon))
+print('IP connections: %d' % len(ipcon))
 for ip in ipcon.keys(): ipcon[ip].disconnect()
 
