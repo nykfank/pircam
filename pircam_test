@@ -108,6 +108,7 @@ required_config_int = 'brick_port', 'rec_sec', 'max_queue', 'sleep_sec', 'reconf
 required_config_dir = 'logfile', 'stop_file', 'pause_file', 'data_dir'
 required_cam = 'mjpeg', 'audio', 'read', 'fps'
 required_cam_int = 'read', 'fps'
+# TODO for sensors
 
 for i in required_config:
 	if not config.has_key(i): 
