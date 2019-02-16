@@ -218,7 +218,7 @@ def configure_motion_detector(uid):
 sensors = load_config(config_file, 'SENSOR')
 cameras = load_config(config_file, 'CAMERA')
 config  = load_config(config_file, 'GLOBAL')
-logg("%d sensors, %d cameras" % (len(sensors), len(cameras)))
+logg('%d sensors, %d cameras' % (len(sensors), len(cameras)))
 
 # Create IP connections to all bricks required by the sensors
 for uid in sensors.keys():

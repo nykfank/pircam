@@ -1,0 +1,188 @@
+#!/usr/bin/python
+
+# pircam_test, 2019 by Niklaus Fankhauser
+
+import os, sys, time, threading, urllib, subprocess, xmpp
+from tinkerforge.ip_connection import IPConnection
+from tinkerforge.bricklet_motion_detector import BrickletMotionDetector
+from tinkerforge.bricklet_motion_detector_v2 import BrickletMotionDetectorV2
+
+# Globals
+config_file = '/opt/pircam_config.txt'
+sensorAPI = {} # Motion detector dictionary
+cbFuns = {} # Callback function dictionary
+ipcon = {} # TCP/IP connections
+
+def load_config(fn, section):
+	"""Load specified section of config file into dictionary."""
+	cdict, current_section = {}, ''
+	for i in open(fn):
+		if not i.strip(): continue
+		isp = i.strip().split('=')
+		if len(isp) == 1:
+			title = isp[0].strip()
+			if title in ['GLOBAL', 'CAMERA', 'SENSOR']: current_section = title
+			else: device = title
+		if current_section != section: continue
+		if len(isp) == 2:
+			key, value = isp[0].strip(), isp[1].strip()
+			if current_section == 'GLOBAL': 
+				cdict[key] = value
+			else:
+				if not cdict.has_key(device): cdict[device] = {}
+				cdict[device][key] = value
+	return cdict
+
+def extract_first_jpeg(mjpeg_data):
+	"""Exctracts first image from MJPEG stream."""
+	header = mjpeg_data.split('\r\n\r\n')[0]
+	if not 'Length: ' in header: return ''
+	content_length = header.split('Length: ')[1].split('\r\n')[0].strip()
+	try: content_length = int(content_length)
+	except: return ''
+	data_start = len(header) + 4
+	if len(mjpeg_data) <= data_start + content_length: return ''
+	return mjpeg_data[data_start:(data_start + content_length)]
+ 
+def upload_to_webserver(fn, remote_path):
+	"""Run a rsync command to upload a file to a path on the webserver."""
+	cmd = 'rsync', fn, '%s:%s/' % (config['webserver'], remote_path)
+	log_and_run(cmd)
+
+def filebase(x):
+	"""Returns filename without path and extension."""
+	return os.path.splitext(os.path.basename(x))[0]
+
+def timeFormat(x):
+	"""Convert YYYYMMDD_HHMMSS to YYYY-MM-DD_HH:MM:SS"""
+	return time.strftime('%Y-%m-%d %H:%M:%S', time.strptime(filebase(x), "%Y%m%d_%H%M%S"))
+
+def index_element(fpath):
+	"""Generates variables required for an element in photoswipe."""
+	src = fpath.replace(config['data_dir'], '')
+	w, h = config['size_x'], config['size_y']
+	title = timeFormat(fpath)
+	video = src.replace('jpg', 'ogg').strip('/')
+	pid = filebase(fpath)
+	return "{src:'%s', w:%s, h:%s, title:'%s', video:'%s', pid:'%s'}" % (src, w, h, title, video, pid)
+
+def generate_index_page():
+	"""Generates HTML page for the numLast recorded videos with photoswipe user interface.""" 
+	path = lambda x : '%s/%s' % (config['data_dir'], x)
+	ftup = [ (f, '%s/%s' % (path(c), f)) for c in cameras.keys() for f in os.listdir(path(c)) if f.endswith('jpg') ]
+	image_paths =  [ fpath for (fn, fpath) in sorted(ftup) ]
+	elemlist = [ index_element(fpath) for fpath in reversed(image_paths) ]
+	photoswipe_script = 'var items = [\n%s\n];\n' % ',\n'.join(elemlist[:int(config['numLast'])])
+	scriptPath = '%s/pircam.js' % config['data_dir']
+	open(scriptPath, 'w').write(photoswipe_script)
+
+def send_jabber(CAMID):
+	"""Sends a jabber message containing activated cam to the recipient specified in config."""
+	jid = xmpp.protocol.JID(config['xmpp_from'])
+	cl = xmpp.Client(config['xmpp_server'], debug=[])
+	if not cl.connect(use_srv=False): return
+	if not cl.auth(jid.getNode(), config['xmpp_pass']): return
+	mid = cl.send(xmpp.protocol.Message(config['xmpp_to'], CAMID))
+	logg('Jabber message id %s for %s sent' % (str(mid), CAMID))
+	return mid
+ 
+def configure_motion_detector(uid):
+	"""Turn off LED, set sensitivity and register motion detection callback function."""
+	global sensorAPI, cbFuns
+	sensorAPI[uid].set_status_led_config(0) # Turn off status LED (is on after bricklet reset)
+	if sensors[uid]['vers'] == '2': sensorAPI[uid].set_sensitivity(sensors[uid]['sensi']) # Set sensitivity
+	cbFuns[uid] = lambda : cb_motion_detected(sensors[uid]['cam']) # Create callback function
+	sensorAPI[uid].register_callback(sensorAPI[uid].CALLBACK_MOTION_DETECTED, cbFuns[uid]) # Register callback function
+	logg('Callback for %s at %s to %s registered' % (uid, sensors[uid]['ip'], sensors[uid]['cam']))
+
+# Load configuration into dictionaries
+sensors = load_config(config_file, 'SENSOR')
+cameras = load_config(config_file, 'CAMERA')
+config  = load_config(config_file, 'GLOBAL')
+print '%d sensors, %d cameras' % (len(sensors), len(cameras))
+
+required_config = 'logfile', 'stop_file', 'pause_file', 'data_dir', 'webRoot', 'brick_port', 
+'webserver', 'rec_sec', 'max_queue', 'sleep_sec', 'reconf_sec', 
+'xmpp_to', 'xmpp_from', 'xmpp_pass', 'xmpp_server', 'size_x', 'size_y', 'numLast'
+required_config_int = 'brick_port', 'rec_sec', 'max_queue', 'sleep_sec', 'reconf_sec', 'size_x', 'size_y', 'numLast'
+required_config_dir = 'logfile', 'stop_file', 'pause_file', 'data_dir'
+required_cam = 'mjpeg', 'audio', 'read', 'fps'
+required_cam_int = 'read', 'fps'
+
+for i in required_config:
+	if not config.has_key(i): 
+		print 'GLOBAL configuration key %s missing!' % i
+		sys.exit()
+print 'GLOBAL configuration keys: OK'
+for i in required_config_int:
+	try: x = int(config[i])
+	except: 
+		print 'GLOBAL configuration key %s not numeric: %s' % (i, config[i])
+		sys.exit()
+print 'GLOBAL configuration keys numeric: OK'
+for i in required_config_dir:
+	idir = os.path.dirname(config[i])
+	if not os.path.isdir(idir):	
+		print 'GLOBAL configuration key %s directory does not exist: %s' % (i, idir)
+		sys.exit()
+print 'GLOBAL configuration key directory existice: OK'
+
+generate_index_page() # Add some error detection?
+print 'Index page: OK'
+
+if len(cameras) == 0:
+	print 'No camera defined!'
+	sys.exit()
+if len(sensors) == 0:
+	print 'No sensor defined!'
+	sys.exit()
+
+for CAMID in cameras.keys():
+	for i in required_cam:
+		if not cameras[CAMID].has_key(i): 
+			print 'CAMERA %s configuration key %s missing!' % (CAMID, i)
+			sys.exit()
+	print 'Camera %s configuration keys: OK' % CAMID
+	for i in required_cam_int:
+		try: x = int(cameras[CAMID][i])
+		except: 
+			print 'CAMERA %s configuration key %s not numeric: %s' % (CAMID, i, cameras[i])
+			sys.exit()
+	print 'Camera %s numeric configuration keys: OK' % CAMID
+	print 'Testing cam %s MJPEG from %s' % (CAMID, cameras[CAMID]['mjpeg'])
+	try: stream = urllib.urlopen(cameras[CAMID]['mjpeg']).read(int(cameras[CAMID]['read']))
+	except:
+		print 'Failed to download MJPEG for camera %s from %s' % (CAMID, cameras[CAMID]['mjpeg'])
+		sys.exit()
+	ofn = '%s.mjpeg' % CAMID
+	open(ofn, 'w').write(stream)
+	print('Downloaded %2.2f MB to %s' % (len(stream)/1024.0/1024.0, ofn))
+	print 'Camera %s MJPEG download: OK' % CAMID
+	ofn = '%s.mp4' % CAMID
+	cmd = 'ffmpeg', '-hide_banner', '-loglevel', 'panic', '-y', '-i', cameras[CAMID]['audio'], '-vn', '-acodec', 'copy', '-t', config['rec_sec'], ofn
+	rcode = subprocess.call(cmd)
+	if rcode > 0 or not os.path.isfile(ofn):
+		print 'Failed to download MP4 audio for camera %s from %s' % (CAMID, cameras[CAMID]['audio'])
+		sys.exit()
+	print 'Camera %s audio download: OK' % CAMID
+
+j = send_jabber('Test')
+if j == None:
+	print 'FAILED to send jabber message'
+	sys.exit()
+print 'Jabber server: OK'
+
+# Create IP connections to all bricks required by the sensors
+for uid in sensors.keys():
+	ip = sensors[uid]['ip']
+	if not ipcon.has_key(ip):
+		ipcon[ip] = IPConnection() # Create IP connection
+		ipcon[ip].connect(ip, int(config['brick_port'])) # Connect to brickd
+	# Create motion detector sensor device object using the IP connection
+	if sensors[uid]['vers'] == '1': sensorAPI[uid] = BrickletMotionDetector(uid, ipcon[ip]) 
+	if sensors[uid]['vers'] == '2': sensorAPI[uid] = BrickletMotionDetectorV2(uid, ipcon[ip])
+	configure_motion_detector(uid)
+	print 'Sensor %s: OK' % uid
+logg('IP connections: %d' % len(ipcon))
+for ip in ipcon.keys(): ipcon[ip].disconnect()
+
