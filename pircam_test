@@ -83,7 +83,7 @@ def send_jabber(CAMID):
 	if not cl.connect(use_srv=False): return
 	if not cl.auth(jid.getNode(), config['xmpp_pass']): return
 	mid = cl.send(xmpp.protocol.Message(config['xmpp_to'], CAMID))
-	logg('Jabber message id %s for %s sent' % (str(mid), CAMID))
+	print('Jabber message id %s for %s sent' % (str(mid), CAMID))
 	return mid
  
 def configure_motion_detector(uid):
@@ -93,7 +93,7 @@ def configure_motion_detector(uid):
 	if sensors[uid]['vers'] == '2': sensorAPI[uid].set_sensitivity(sensors[uid]['sensi']) # Set sensitivity
 	cbFuns[uid] = lambda : cb_motion_detected(sensors[uid]['cam']) # Create callback function
 	sensorAPI[uid].register_callback(sensorAPI[uid].CALLBACK_MOTION_DETECTED, cbFuns[uid]) # Register callback function
-	logg('Callback for %s at %s to %s registered' % (uid, sensors[uid]['ip'], sensors[uid]['cam']))
+	print('Callback for %s at %s to %s registered' % (uid, sensors[uid]['ip'], sensors[uid]['cam']))
 
 # Load configuration into dictionaries
 sensors = load_config(config_file, 'SENSOR')
@@ -149,20 +149,20 @@ for CAMID in cameras.keys():
 			print 'CAMERA %s configuration key %s not numeric: %s' % (CAMID, i, cameras[i])
 			sys.exit()
 	print 'Camera %s numeric configuration keys: OK' % CAMID
-	print 'Testing cam %s MJPEG from %s' % (CAMID, cameras[CAMID]['mjpeg'])
+	print 'Testing camera %s MJPEG download from %s' % (CAMID, cameras[CAMID]['mjpeg'])
 	try: stream = urllib.urlopen(cameras[CAMID]['mjpeg']).read(int(cameras[CAMID]['read']))
 	except:
 		print 'Failed to download MJPEG for camera %s from %s' % (CAMID, cameras[CAMID]['mjpeg'])
 		sys.exit()
 	ofn = '%s.mjpeg' % CAMID
 	open(ofn, 'w').write(stream)
-	print('Downloaded %2.2f MB to %s' % (len(stream)/1024.0/1024.0, ofn))
 	print 'Camera %s MJPEG download: OK' % CAMID
+	print 'Testing cam %s audio download from %s' % (CAMID, cameras[CAMID]['audio'])
 	ofn = '%s.mp4' % CAMID
 	cmd = 'ffmpeg', '-hide_banner', '-loglevel', 'panic', '-y', '-i', cameras[CAMID]['audio'], '-vn', '-acodec', 'copy', '-t', config['rec_sec'], ofn
 	rcode = subprocess.call(cmd)
 	if rcode > 0 or not os.path.isfile(ofn):
-		print 'Failed to download MP4 audio for camera %s from %s' % (CAMID, cameras[CAMID]['audio'])
+		print 'Failed to download audio for camera %s from %s' % (CAMID, cameras[CAMID]['audio'])
 		sys.exit()
 	print 'Camera %s audio download: OK' % CAMID
 
