@@ -2,7 +2,7 @@
 
 # pircam_test, 2019 by Niklaus Fankhauser
 
-import os, sys, time, threading, urllib, subprocess, xmpp
+import os, sys, time, urllib, subprocess, xmpp
 from tinkerforge.ip_connection import IPConnection
 from tinkerforge.bricklet_motion_detector import BrickletMotionDetector
 from tinkerforge.bricklet_motion_detector_v2 import BrickletMotionDetectorV2
