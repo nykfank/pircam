@@ -186,4 +186,7 @@ for uid in sensors.keys():
 	print 'Sensor %s: OK' % uid
 print('IP connections: %d' % len(ipcon))
 for ip in ipcon.keys(): ipcon[ip].disconnect()
+
+# TODO: create output directories!
+
 print 'All tests OK!'
