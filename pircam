@@ -159,6 +159,7 @@ def run_converter(CAMID):
 		upload_to_webserver(ofn, '%s/%s' % (config['data_dir'], CAMID))
 		upload_to_webserver(jfn, '%s/%s' % (config['data_dir'], CAMID))
 	cameras[CAMID]['read'] = int(int(cameras[CAMID]['read']) * int(config['rec_sec']) / video_sec)
+	if cameras[CAMID]['read'] > int(config['max_down']): cameras[CAMID]['read'] = int(config['max_down'])
 	logg('New MJPEG read length for %s: %2.2f MB' % (CAMID, cameras[CAMID]['read']/1024.0/1024.0))
 	generate_index_page()
 	upload_to_webserver('%s/pircam.js' % config['data_dir'], config['webRoot'])

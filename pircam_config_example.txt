@@ -10,6 +10,7 @@ rec_sec     = 20
 max_queue   = 5
 sleep_sec   = 5
 reconf_sec  = 300
+max_down    = 25000000
 xmpp_to     = user@example.org
 xmpp_from   = pircam@example.org
 xmpp_pass   = password
