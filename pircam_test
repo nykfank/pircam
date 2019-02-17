@@ -85,6 +85,9 @@ def send_jabber(CAMID):
 	mid = cl.send(xmpp.protocol.Message(config['xmpp_to'], CAMID))
 	print('Jabber message id %s for %s sent' % (str(mid), CAMID))
 	return mid
+
+def cb_motion_detected(CAMID):
+	print 'Motion callback %s' % CAMID
  
 def configure_motion_detector(uid):
 	"""Turn off LED, set sensitivity and register motion detection callback function."""
