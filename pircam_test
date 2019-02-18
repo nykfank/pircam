@@ -12,6 +12,7 @@ config_file = '/opt/pircam_config.txt'
 sensorAPI = {} # Motion detector dictionary
 cbFuns = {} # Callback function dictionary
 ipcon = {} # TCP/IP connections
+test_dir = 'test_pircam_output'
 
 def load_config(fn, section):
 	"""Load specified section of config file into dictionary."""
@@ -111,7 +112,7 @@ required_config_int = 'brick_port', 'rec_sec', 'max_queue', 'sleep_sec', 'reconf
 required_config_dir = 'logfile', 'stop_file', 'pause_file', 'data_dir'
 required_cam = 'mjpeg', 'audio', 'read', 'fps'
 required_cam_int = 'read', 'fps'
-# TODO for sensors
+required_sensor = 'cam', 'ip', 'vers'
 
 for i in required_config:
 	if not config.has_key(i): 
@@ -141,6 +142,8 @@ if len(sensors) == 0:
 	print 'No sensor defined!'
 	sys.exit()
 
+if not os.path.isdir(test_dir): os.mkdir(test_dir)
+
 for CAMID in cameras.keys():
 	for i in required_cam:
 		if not cameras[CAMID].has_key(i): 
@@ -153,16 +156,31 @@ for CAMID in cameras.keys():
 			print 'CAMERA %s configuration key %s not numeric: %s' % (CAMID, i, cameras[i])
 			sys.exit()
 	print 'Camera %s numeric configuration keys: OK' % CAMID
+	# Testing output directories
+	mp4_dir = '%s/%s_mp4' % (config['data_dir'], CAMID)
+	if not os.path.isdir(mp4_dir):
+		print 'Creating %s' % mp4_dir
+		os.mkdir(mp4_dir)
+	mjpeg_dir = '%s/%s_mjpeg' % (config['data_dir'], CAMID)
+	if not os.path.isdir(mjpeg_dir):
+		print 'Creating %s' % mjpeg_dir
+		os.mkdir(mjpeg_dir)
+	cam_dir = '%s/%s' % (config['data_dir'], CAMID)
+	if not os.path.isdir(cam_dir):
+		print 'Creating %s' % cam_dir
+		os.mkdir(cam_dir)
+	# Testing video download
 	print 'Testing camera %s MJPEG download from %s' % (CAMID, cameras[CAMID]['mjpeg'])
 	try: stream = urllib.urlopen(cameras[CAMID]['mjpeg']).read(int(cameras[CAMID]['read']))
 	except:
 		print 'Failed to download MJPEG for camera %s from %s' % (CAMID, cameras[CAMID]['mjpeg'])
 		sys.exit()
-	ofn = '%s.mjpeg' % CAMID
+	ofn = '%s/%s.mjpeg' % (test_dir, CAMID)
 	open(ofn, 'w').write(stream)
 	print 'Camera %s MJPEG download: OK' % CAMID
+	# Testing audio download
 	print 'Testing cam %s audio download from %s' % (CAMID, cameras[CAMID]['audio'])
-	ofn = '%s.mp4' % CAMID
+	ofn = '%s/%s.mp4' % (test_dir, CAMID)
 	cmd = 'ffmpeg', '-hide_banner', '-loglevel', 'panic', '-y', '-i', cameras[CAMID]['audio'], '-vn', '-acodec', 'copy', '-t', config['rec_sec'], ofn
 	rcode = subprocess.call(cmd)
 	if rcode > 0 or not os.path.isfile(ofn):
@@ -170,6 +188,7 @@ for CAMID in cameras.keys():
 		sys.exit()
 	print 'Camera %s audio download: OK' % CAMID
 
+# Testing XMPP
 j = send_jabber('Test')
 if j == None:
 	print 'FAILED to send jabber message'
@@ -178,6 +197,10 @@ print 'Jabber server: OK'
 
 # Create IP connections to all bricks required by the sensors
 for uid in sensors.keys():
+	for i in required_sensor:
+		if not sensors[uid].has_key(i): 
+			print 'SENSOR %s configuration key %s missing!' % (uid, i)
+			sys.exit()
 	ip = sensors[uid]['ip']
 	if not ipcon.has_key(ip):
 		ipcon[ip] = IPConnection() # Create IP connection
@@ -189,7 +212,5 @@ for uid in sensors.keys():
 	print 'Sensor %s: OK' % uid
 print('IP connections: %d' % len(ipcon))
 for ip in ipcon.keys(): ipcon[ip].disconnect()
-
-# TODO: create output directories!
 
 print 'All tests OK!'
