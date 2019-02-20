@@ -34,7 +34,7 @@ def load_config(fn, section):
 				cdict[device][key] = value
 	return cdict
 
-def extract_first_jpeg(mjpeg_data): # TODO
+def extract_first_jpeg(mjpeg_data):
 	"""Exctracts first image from MJPEG stream."""
 	header = mjpeg_data.split('\r\n\r\n')[0]
 	if not 'Length: ' in header: return ''
@@ -178,6 +178,14 @@ for CAMID in cameras.keys():
 	ofn = '%s/%s.mjpeg' % (test_dir, CAMID)
 	open(ofn, 'w').write(stream)
 	print 'Camera %s MJPEG download: OK' % CAMID
+	mjpeg_data = open(ofn).read()
+	jpeg_data = extract_first_jpeg(mjpeg_data)
+	if len(jpeg_data) == 0:
+		print 'Failed to extract JPEG from MJPEG'
+		sys.exit()
+	jfn = '%s/%s.jpeg' % (test_dir, CAMID)
+	open(jfn, 'w').write(jpeg_data)
+	print 'JPEG extraction: OK'
 	# Testing audio download
 	print 'Testing cam %s audio download from %s' % (CAMID, cameras[CAMID]['audio'])
 	ofn = '%s/%s.mp4' % (test_dir, CAMID)
