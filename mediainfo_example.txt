@@ -1,0 +1,36 @@
+General
+Complete name                            : 20190219_105253.ogg
+Format                                   : Ogg
+File size                                : 4.02 MiB
+Duration                                 : 10 s 36 ms
+Overall bit rate mode                    : Variable
+Overall bit rate                         : 3 360 kb/s
+Writing application                      : Lavc57.64.101 libvorbis
+handler_name                             : SoundHandler
+
+Video
+ID                                       : 2294783359 (0x88C79D7F)
+Format                                   : Theora
+Duration                                 : 10 s 0 ms
+Bit rate                                 : 3 170 kb/s
+Width                                    : 1 280 pixels
+Height                                   : 720 pixels
+Display aspect ratio                     : 16:9
+Frame rate                               : 5.000 FPS
+Compression mode                         : Lossy
+Bits/(Pixel*Frame)                       : 0.688
+Stream size                              : 3.78 MiB (94%)
+Writing library                          : Lavf57.56.101
+
+Audio
+ID                                       : 3992832534 (0xEDFDCA16)
+Format                                   : Vorbis
+Format settings, Floor                   : 1
+Duration                                 : 10 s 36 ms
+Bit rate mode                            : Variable
+Bit rate                                 : 48.0 kb/s
+Channel(s)                               : 1 channel
+Sampling rate                            : 16.0 kHz
+Compression mode                         : Lossy
+Stream size                              : 58.8 KiB (1%)
+Writing library                          : Lavf57.56.101
