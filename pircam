@@ -248,7 +248,11 @@ while True: # Main loop
 	# Check for bricklet reset and reconfigure if needed (status LED on).
 	if reconfigure_time + int(config['reconf_sec']) < time.time():
 		for uid in sensors.keys():
-			if sensorAPI[uid].get_status_led_config() > 0:
+			try: led_status = sensorAPI[uid].get_status_led_config()
+			except:
+				logg('Bricklet %s unreachable' % uid)
+				continue
+			if led_status > 0:
 				logg('Bricklet %s reset' % uid)
 				configure_motion_detector(uid)
 		reconfigure_time = time.time()
