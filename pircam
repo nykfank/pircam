@@ -3,7 +3,7 @@
 # pircam, 2019 by Niklaus Fankhauser
 # Motion detection sensor triggered capture and combination of MJPEG video and audio from D-Link network cameras.
 
-import os, sys, time, threading, urllib, subprocess, xmpp
+import os, sys, time, threading, urllib, subprocess, xmpp, sqlite3
 from tinkerforge.ip_connection import IPConnection
 from tinkerforge.bricklet_motion_detector import BrickletMotionDetector
 from tinkerforge.bricklet_motion_detector_v2 import BrickletMotionDetectorV2
@@ -99,12 +99,36 @@ def timeFormat(x):
 	"""Convert YYYYMMDD_HHMMSS to YYYY-MM-DD_HH:MM:SS"""
 	return time.strftime('%Y-%m-%d %H:%M:%S', time.strptime(filebase(x), "%Y%m%d_%H%M%S"))
 
+def get_bitrate(fn):
+	cmd = 'ffprobe %s 2>&1' % fn
+	r = os.popen(cmd).read()
+	if not 'bitrate: ' in r: return 0
+	return int(r.split('bitrate: ')[1].split(' ')[0].strip())
+
+def bitrate_to_db(fn, bitrate):
+	db = sqlite3.connect(config['db_fn'])
+	dbc = db.cursor()
+	fn2 = fn.replace(config['data_dir'] + '/', '')
+	dbc.execute('INSERT INTO files (fn, bitrate) VALUES (?,?)',(fn2, bitrate))
+	db.commit()
+	db.close()
+
+def bitrate_from_db(fn):
+	db = sqlite3.connect(config['db_fn'])
+	dbc = db.cursor()
+	fn2 = fn.replace(config['data_dir'] + '/', '')
+	dbc.execute('SELECT bitrate FROM files WHERE fn = ?', (fn2,))
+	r = dbc.fetchone()
+	db.close()
+	if not r: return 0
+	return r[0]
+
 def index_element(fpath):
 	"""Generates variables required for an element in photoswipe."""
 	src = fpath.replace(config['data_dir'], '')
 	w, h = config['size_x'], config['size_y']
-	title = timeFormat(fpath)
 	video = src.replace('jpg', 'ogg').strip('/')
+	title = '%s (%d kb/s)' % (timeFormat(fpath), bitrate_from_db(video))
 	pid = filebase(fpath)
 	return "{src:'%s', w:%s, h:%s, title:'%s', video:'%s', pid:'%s'}" % (src, w, h, title, video, pid)
 
@@ -158,6 +182,8 @@ def run_converter(CAMID):
 		logg('Video of %2.2f MB created at %s' % (os.stat(ofn).st_size/1024.0/1024.0, ofn))
 		upload_to_webserver(ofn, '%s/%s' % (config['data_dir'], CAMID))
 		upload_to_webserver(jfn, '%s/%s' % (config['data_dir'], CAMID))
+		bitrate = get_bitrate(ofn)
+		bitrate_to_db(ofn, bitrate)
 	cameras[CAMID]['read'] = int(int(cameras[CAMID]['read']) * int(config['rec_sec']) / video_sec)
 	if cameras[CAMID]['read'] > int(config['max_down']): cameras[CAMID]['read'] = int(config['max_down'])
 	logg('New MJPEG read length for %s: %2.2f MB' % (CAMID, cameras[CAMID]['read']/1024.0/1024.0))

@@ -31,7 +31,7 @@ def get_bitrate(fn):
 def bitrate_to_db(fn, bitrate):
 	db = sqlite3.connect(config['db_fn'])
 	dbc = db.cursor()
-	fn2 = fn.replace(config['data_dir'], '')
+	fn2 = fn.replace(config['data_dir'] + '/', '')
 	dbc.execute('INSERT INTO files (fn, bitrate) VALUES (?,?)',(fn2, bitrate))
 	db.commit()
 	db.close()
@@ -39,7 +39,7 @@ def bitrate_to_db(fn, bitrate):
 def exists_in_db(fn):
 	db = sqlite3.connect(config['db_fn'])
 	dbc = db.cursor()
-	fn2 = fn.replace(config['data_dir'], '')
+	fn2 = fn.replace(config['data_dir'] + '/', '')
 	dbc.execute('SELECT COUNT(*) FROM files WHERE fn = ?', (fn2,))
 	r, = dbc.fetchone()
 	db.close()
