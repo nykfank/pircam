@@ -2,7 +2,7 @@
 
 # pircam_test, 2019 by Niklaus Fankhauser
 
-import os, sys, time, urllib, subprocess, xmpp
+import os, sys, time, urllib, subprocess, xmpp, sqlite3
 from tinkerforge.ip_connection import IPConnection
 from tinkerforge.bricklet_motion_detector import BrickletMotionDetector
 from tinkerforge.bricklet_motion_detector_v2 import BrickletMotionDetectorV2
@@ -131,6 +131,13 @@ for i in required_config_dir:
 		print 'GLOBAL configuration key %s directory does not exist: %s' % (i, idir)
 		sys.exit()
 print 'GLOBAL configuration key directory existice: OK'
+
+db = sqlite3.connect(config['db_fn'])
+dbc = db.cursor()
+dbc.execute('CREATE TABLE IF NOT EXISTS files (fn TEXT, rate INTEGER)')
+dbc.execute('CREATE INDEX IF NOT EXISTS files_idx ON files (fn)')
+db.commit()
+db.close()
 
 generate_index_page() # Add some error detection?
 print 'Index page: OK'
