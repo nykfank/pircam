@@ -1,7 +1,6 @@
 #!/usr/bin/python
 import sqlite3, os
 config_file = '/opt/pircam_config.txt'
-db_fn = '%s/.bitrate.db' % os.getenv("HOME")
 
 def load_config(fn, section):
 	"""Load specified section of config file into dictionary."""
@@ -23,27 +22,38 @@ def load_config(fn, section):
 				cdict[device][key] = value
 	return cdict
 
+def get_bitrate(fn):
+	cmd = 'ffprobe %s 2>&1' % fn
+	r = os.popen(cmd).read()
+	if not 'bitrate: ' in r: return 0
+	return int(r.split('bitrate: ')[1].split(' ')[0].strip())
+
+def bitrate_to_db(fn, bitrate):
+	db = sqlite3.connect(config['db_fn'])
+	dbc = db.cursor()
+	fn2 = fn.replace(config['data_dir'], '')
+	dbc.execute('INSERT INTO files (fn, bitrate) VALUES (?,?)',(fn2, bitrate))
+	db.commit()
+	db.close()
+
+def exists_in_db(fn):
+	db = sqlite3.connect(config['db_fn'])
+	dbc = db.cursor()
+	fn2 = fn.replace(config['data_dir'], '')
+	dbc.execute('SELECT COUNT(*) FROM files WHERE fn = ?', (fn2,))
+	r, = dbc.fetchone()
+	db.close()
+	return r > 0
+
 # Load configuration into dictionaries
 cameras = load_config(config_file, 'CAMERA')
 config  = load_config(config_file, 'GLOBAL')
-db = sqlite3.connect(db_fn)
-dbc = db.cursor()
-dbc.execute('CREATE TABLE IF NOT EXISTS files (fn TEXT, bitrate INTEGER)')
-dbc.execute('CREATE INDEX IF NOT EXISTS files_idx ON files (fn)')
 for CAMID in cameras.keys():
 	indir = '%s/%s' % (config['data_dir'], CAMID)
 	for f in os.listdir(indir):
 		if not f.endswith('ogg'): continue
 		fn = '%s/%s' % (indir, f)
-		fn2 = fn.replace(config['data_dir'], '')
-		dbc.execute('SELECT COUNT(*) FROM files WHERE fn = ?', (fn2,))
-		if dbc.fetchone()[0] > 0: continue
-		cmd = 'ffprobe %s 2>&1' % fn
-		r = os.popen(cmd).read()
-		if not 'bitrate: ' in r:
-			print '%s: ERROR' % fn
-			continue
-		bitrate = int(r.split('bitrate: ')[1].split(' ')[0].strip())
-		dbc.execute('INSERT INTO files (fn, bitrate) VALUES (?,?)',(fn2, bitrate))
+		if exists_in_db(fn): continue
+		bitrate = get_bitrate(fn)
+		bitrate_to_db(fn, bitrate)
 		print '%s: %d' % (fn, bitrate)
-	db.commit()
