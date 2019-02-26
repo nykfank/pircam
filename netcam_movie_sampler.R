@@ -1,4 +1,5 @@
 # args: eingang / hinterhaus
+# commandArgs <- function(...) "eingang"
 args <- commandArgs(trailingOnly=TRUE)
 if (!exists("camID")) camID <- args[1]
 library(data.table)
@@ -8,6 +9,7 @@ writeLines(sprintf("Movie directory: %s", indir))
 tempTextFile <- "/tmp/vidfiles.txt"
 sampleSize <- 50
 video <- data.table(datei = list.files(indir, pattern="ogg"))
+stopifnot(nrow(video) > 0)
 video[, zeit := as.POSIXct(sub("netcam", "", datei), tz="", "%Y%m%d_%H%M%S")]
 video[, stunde := as.numeric(format(zeit, "%H")) + as.numeric(format(zeit, "%M")) / 60]
 video[, sunrise := getSunlightTimes(date = as.Date(zeit), lat = 46.93, lon = 7.415, tz = "CET")$sunrise]
