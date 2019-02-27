@@ -26,11 +26,11 @@ mergefiles <- sprintf("file '%s/%s'", indir, video[wahl==TRUE, datei])
 write(mergefiles, file=tempTextFile)
 outfile <- sprintf("%s%d.ogg", camID, as.integer(Sys.time()))
 cmd <- sprintf(
-	'ffmpeg -hide_banner -f concat -safe 0 -i %s -filter:v "setpts=0.25*PTS" -filter:a "atempo=2.0,atempo=2.0" %s', 
+	'ffmpeg -hide_banner -f concat -safe 0 -i %s -filter:v "setpts=0.25*PTS" -filter:a "atempo=2.0,atempo=2.0" -qscale:v 7 %s', 
 	tempTextFile, outfile
 )
 system(cmd)
 writeLines(outfile)
 
 # -loglevel panic
-# -vf select="between(n\\,0\\,10)" -vsync 0 -qscale:v 7
+# -vf select="between(n\\,0\\,10)" -vsync 0 
