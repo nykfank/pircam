@@ -130,7 +130,7 @@ for i in required_config_dir:
 	if not os.path.isdir(idir):	
 		print 'GLOBAL configuration key %s directory does not exist: %s' % (i, idir)
 		sys.exit()
-print 'GLOBAL configuration key directory existice: OK'
+print 'GLOBAL configuration key directory existence: OK'
 
 db = sqlite3.connect(config['db_fn'])
 dbc = db.cursor()
