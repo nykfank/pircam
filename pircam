@@ -183,11 +183,11 @@ def run_converter(CAMID):
 		rate_to_db(ofn, comp_ratio)
 	cameras[CAMID]['read'] = int(int(cameras[CAMID]['read']) * int(config['rec_sec']) / video_sec)
 	if cameras[CAMID]['read'] > int(config['max_down']): cameras[CAMID]['read'] = int(config['max_down'])
-	if config['verbose'] == 'True': logg('New MJPEG read length for %s: %2.2f MB' % (CAMID, cameras[CAMID]['read']/1024.0/1024.0))
+	if config['verbose'] == 'True': logg('%s: New MJPEG read length is %2.2f MB' % (CAMID, cameras[CAMID]['read']/1024.0/1024.0))
 	generate_index_page()
 	upload_to_webserver('%s/pircam.js' % config['data_dir'], config['webRoot'])
 	upload_to_webserver(config['logfile'], config['webRoot'])
-	if config['verbose'] == 'True': logg('Converter thread for %s finished' % CAMID)
+	if config['verbose'] == 'True': logg('%s: Converter thread finished' % CAMID)
  
 def send_jabber(CAMID):
 	"""Sends a jabber message containing activated cam to the recipient specified in config."""
@@ -196,22 +196,22 @@ def send_jabber(CAMID):
 	if not cl.connect(use_srv=False): return
 	if not cl.auth(jid.getNode(), config['xmpp_pass']): return
 	mid = cl.send(xmpp.protocol.Message(config['xmpp_to'], CAMID))
-	if config['verbose'] == 'True': logg('Jabber message id %s for %s sent' % (str(mid), CAMID))
+	if config['verbose'] == 'True': logg('%s: Jabber message id %s sent' % (CAMID, str(mid)))
  
 def cb_motion_detected(CAMID):
 	"""Callback function for motion detection starts threads for video/audio download, if possible."""
 	global current_video_thread, current_audio_thread, audio_queue
 	if os.path.isfile(config['pause_file']):
-		logg('Motion %s, paused' % CAMID)
+		logg('%s: Motion, paused' % CAMID)
 		return
 	if current_video_thread.has_key(CAMID) and current_video_thread[CAMID].isAlive(): return
 	if cameras[CAMID].has_key('sun'):
 		if time.strftime("%H:%M") in [ m.strip() for m in cameras[CAMID]['sun'].split(',') ]:
-			logg('Motion %s, sun' % CAMID)
+			logg('%s: Motion, sun' % CAMID)
 			return
 	current_video_thread[CAMID] = threading.Thread(target=download_mjpeg, args=[CAMID])
 	current_video_thread[CAMID].start()
-	logg('Motion %s, video thread started' % CAMID)
+	logg('%s: Motion, video thread started' % CAMID)
 	send_jabber(CAMID)
 	if cameras[CAMID]['audio'] == 'None':
 		audio_queue[CAMID] = []
@@ -219,7 +219,7 @@ def cb_motion_detected(CAMID):
 	if current_audio_thread.has_key(CAMID) and current_audio_thread[CAMID].isAlive(): return
 	current_audio_thread[CAMID] = threading.Thread(target=download_audio, args=[CAMID])
 	current_audio_thread[CAMID].start()
-	logg('Motion %s, audio thread started' % CAMID)
+	logg('%s: Motion, audio thread started' % CAMID)
 
 def is_idle():
 	"""Returns True if no download or convert threads are running."""
@@ -273,10 +273,10 @@ while True: # Main loop
 		for uid in sensors.keys():
 			try: led_status = sensorAPI[uid].get_status_led_config()
 			except:
-				logg('Bricklet %s unreachable' % uid)
+				logg('%s: Bricklet unreachable' % uid)
 				continue
 			if led_status > 0:
-				logg('Bricklet %s reset' % uid)
+				logg('%s: Bricklet reset' % uid)
 				configure_motion_detector(uid)
 		reconfigure_time = time.time()
 for ip in ipcon.keys(): ipcon[ip].disconnect()
