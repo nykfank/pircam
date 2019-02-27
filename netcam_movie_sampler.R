@@ -6,8 +6,8 @@ library(data.table)
 library(suncalc)
 indir <- sprintf("/mnt/big/nick/cams/%s", camID)
 writeLines(sprintf("Movie directory: %s", indir))
-tempTextFile <- "/tmp/vidfiles.txt"
-sampleSize <- 50
+tempTextFile <- sprintf("/tmp/vidfiles%d.txt", as.integer(Sys.time()))
+sampleSize <- 20
 video <- data.table(datei = list.files(indir, pattern="ogg"))
 stopifnot(nrow(video) > 0)
 video[, zeit := as.POSIXct(sub("netcam", "", datei), tz="", "%Y%m%d_%H%M%S")]
@@ -24,12 +24,13 @@ print(table(video$tag, video$wahl, dnn=c("tag", "wahl")))
 
 mergefiles <- sprintf("file '%s/%s'", indir, video[wahl==TRUE, datei])
 write(mergefiles, file=tempTextFile)
-outfile <- sprintf("%s%d.mp4", camID, as.integer(Sys.time()))
+outfile <- sprintf("%s%d.ogg", camID, as.integer(Sys.time()))
 cmd <- sprintf(
-	'ffmpeg -hide_banner -loglevel panic -f concat -safe 0 -i %s -filter:v "setpts=0.25*PTS" -filter:a "atempo=2.0,atempo=2.0" %s', 
+	'ffmpeg -hide_banner -f concat -safe 0 -i %s -vf select="between(n\\,0\\,10)" -vsync 0 -qscale:v 7 %s', 
 	tempTextFile, outfile
 )
 system(cmd)
 writeLines(outfile)
 
-# TODO: use mediainfo filaname.ogg to get length / compression ratio
+# -loglevel panic
+# -filter:v "setpts=0.25*PTS" -filter:a "atempo=2.0,atempo=2.0"
