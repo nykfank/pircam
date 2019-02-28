@@ -9,10 +9,13 @@ writeLines(sprintf("Movie directory: %s", indir))
 tempTextFile <- sprintf("/tmp/vidfiles%d.txt", as.integer(Sys.time()))
 sampleSize <- 60
 seconds_per_video <- 4
+speedup <- 4
 video <- data.table(datei = list.files(indir, pattern="ogg"))
 stopifnot(nrow(video) > 0)
 video[, zeit := as.POSIXct(sub("netcam", "", datei), tz="", "%Y%m%d_%H%M%S")]
-video <- video[zeit > as.POSIXct('2019-01-28'),] # No audio before this date
+if (camID == "eingang") video <- video[zeit > as.POSIXct('2019-01-28'),] # No audio before this date
+if (camID == "bambus") video <- video[zeit > as.POSIXct('2019-01-29'),] # No audio before this date
+if (camID == "hinterhaus") video <- video[zeit > as.POSIXct('2019-02-08'),] # No audio before this date
 video[, stunde := as.numeric(format(zeit, "%H")) + as.numeric(format(zeit, "%M")) / 60]
 video[, sunrise := getSunlightTimes(date = as.Date(zeit), lat = 46.93, lon = 7.415, tz = "CET")$sunrise]
 video[, sunrise := as.numeric(format(sunrise, "%H")) + as.numeric(format(sunrise, "%M")) / 60]
@@ -33,9 +36,8 @@ for (v in video[wahl==TRUE, datei]) {
 mergefiles <- sprintf("file '/tmp/%s'", video[wahl==TRUE, datei])
 write(mergefiles, file=tempTextFile)
 outfile <- sprintf("%s%d.ogg", camID, as.integer(Sys.time()))
-cmd <- sprintf(
-	'ffmpeg -hide_banner -loglevel panic -y -f concat -safe 0 -i %s -filter:v "setpts=0.25*PTS" -filter:a "atempo=2.0,atempo=2.0" -qscale:v 7 %s', 
-	tempTextFile, outfile
-)
+if (speedup == 1) cmd <- sprintf('ffmpeg -hide_banner -loglevel panic -y -f concat -safe 0 -i %s -qscale:v 7 %s', tempTextFile, outfile)
+if (speedup == 2) cmd <- sprintf('ffmpeg -hide_banner -loglevel panic -y -f concat -safe 0 -i %s -filter:v "setpts=0.5*PTS" -filter:a "atempo=2.0" -qscale:v 7 %s', tempTextFile, outfile)
+if (speedup == 4) cmd <- sprintf('ffmpeg -hide_banner -loglevel panic -y -f concat -safe 0 -i %s -filter:v "setpts=0.25*PTS" -filter:a "atempo=2.0,atempo=2.0" -qscale:v 7 %s', tempTextFile, outfile)
 writeLines(cmd)
 system(cmd)
