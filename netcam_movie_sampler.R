@@ -34,3 +34,5 @@ writeLines(outfile)
 
 # -loglevel panic
 # -vf select="between(n\\,0\\,10)" -vsync 0 
+# write frames to images, create movie from first x number of frames?
+# concatenate audio or pass to ffmpeg when creating movie from frames?
