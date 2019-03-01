@@ -28,7 +28,7 @@ video[is.na(wahl), "wahl"] <- FALSE
 print(table(video$tag, video$wahl, dnn=c("tag", "wahl")))
 
 for (v in video[wahl==TRUE, datei]) {
-	cmd <- sprintf("ffmpeg -hide_banner -loglevel panic -y -i %s/%s -to 00:00:%02d -c copy /tmp/%s", indir, v, seconds_per_video, v)
+	cmd <- sprintf("ffmpeg -hide_banner -loglevel panic -y -err_detect ignore_err -i %s/%s -to 00:00:%02d -c copy /tmp/%s", indir, v, seconds_per_video, v)
 	writeLines(cmd)
 	system(cmd)
 }
