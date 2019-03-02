@@ -1,4 +1,4 @@
-# Remove fork from pircam
+# Set fork to False in pircam_config.txt
 # Copy to /etc/systemd/system/pircam.service
 # systemctl daemon-reload
 # systemctl enable pircam.service
