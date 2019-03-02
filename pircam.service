@@ -1,0 +1,17 @@
+# Remove fork from pircam
+# Copy to /etc/systemd/system/pircam.service
+# systemctl daemon-reload
+# systemctl enable pircam.service
+# systemctl start pircam.service
+
+[Unit]
+Description=pircam
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/usr/bin/pircam
+
+[Install]
+WantedBy=multi-user.target
