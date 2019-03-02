@@ -12,6 +12,7 @@ After=network.target
 Type=simple
 Restart=always
 ExecStart=/usr/bin/pircam
+User=root
 
 [Install]
 WantedBy=multi-user.target
