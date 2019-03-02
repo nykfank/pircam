@@ -7,7 +7,6 @@ import os, sys, time, threading, urllib, subprocess, xmpp, sqlite3
 from tinkerforge.ip_connection import IPConnection
 from tinkerforge.bricklet_motion_detector import BrickletMotionDetector
 from tinkerforge.bricklet_motion_detector_v2 import BrickletMotionDetectorV2
-if os.fork(): sys.exit() # Run as daemon
 
 # Globals
 config_file = '/opt/pircam_config.txt'
@@ -66,7 +65,7 @@ def download_audio(CAMID):
 	"""Download AAC audio in a MP4 container from RTSP using ffmpeg and add filename to audio-queue."""
 	global audio_queue
 	ofn = '%s/%s_mp4/%s.mp4' % (config['data_dir'], CAMID, time.strftime('%Y%m%d_%H%M%S'))
-	cmd = 'ffmpeg', '-hide_banner', '-i', cameras[CAMID]['audio'], '-vn', '-acodec', 'copy', '-t', config['rec_sec'], ofn
+	cmd = 'ffmpeg', '-hide_banner', '-loglevel', 'panic', '-y', '-i', cameras[CAMID]['audio'], '-vn', '-acodec', 'copy', '-t', config['rec_sec'], ofn
 	log_and_run(cmd)
 	if not os.path.isfile(ofn):
 		logg('%s: Audio download failed!' % CAMID)
@@ -169,9 +168,9 @@ def run_converter(CAMID):
 			video_time = unixtime(filebase(vfn))
 			audio_diff = [abs(unixtime(i) - video_time) for i in audio_base]
 			afn = local_audio_queue[audio_diff.index(min(audio_diff))]			
-			cmd = 'ffmpeg', '-hide_banner', '-y', '-r', str(fps), '-i', vfn, '-i', afn, '-codec:v', 'libtheora', '-qscale:v', '7', ofn
+			cmd = 'ffmpeg', '-hide_banner', '-loglevel', 'panic', '-y', '-r', str(fps), '-i', vfn, '-i', afn, '-codec:v', 'libtheora', '-qscale:v', '7', ofn
 		else:
-			cmd = 'ffmpeg', '-hide_banner', '-y', '-r', str(fps), '-i', vfn, '-codec:v', 'libtheora', '-qscale:v', '7', ofn
+			cmd = 'ffmpeg', '-hide_banner', '-loglevel', 'panic', '-y', '-r', str(fps), '-i', vfn, '-codec:v', 'libtheora', '-qscale:v', '7', ofn
 		log_and_run(cmd)
 		if not os.path.isfile(ofn):
 			logg('%s: Failed to create %s!' % (CAMID, ofn))
@@ -242,6 +241,8 @@ def configure_motion_detector(uid):
 sensors = load_config(config_file, 'SENSOR')
 cameras = load_config(config_file, 'CAMERA')
 config  = load_config(config_file, 'GLOBAL')
+if config['fork'] == 'True':
+	if os.fork(): sys.exit() # Run as daemon
 logg('%d sensors, %d cameras' % (len(sensors), len(cameras)))
 
 # Create IP connections to all bricks required by the sensors

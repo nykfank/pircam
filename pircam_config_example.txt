@@ -19,7 +19,8 @@ size_x      = 1280
 size_y      = 720
 numLast     = 150
 db_fn       = /opt/bitrate.db
-verbose     = True
+verbose     = False
+fork		= False
 
 CAMERA
 netcam

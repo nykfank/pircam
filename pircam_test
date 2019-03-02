@@ -107,7 +107,7 @@ print '%d sensors, %d cameras' % (len(sensors), len(cameras))
 
 required_config = 'logfile', 'stop_file', 'pause_file', 'data_dir', 'webRoot', 'brick_port', 
 'webserver', 'rec_sec', 'max_queue', 'sleep_sec', 'reconf_sec', 'verbose', 'db_fn'
-'xmpp_to', 'xmpp_from', 'xmpp_pass', 'xmpp_server', 'size_x', 'size_y', 'numLast'
+'xmpp_to', 'xmpp_from', 'xmpp_pass', 'xmpp_server', 'size_x', 'size_y', 'numLast', 'fork'
 required_config_int = 'brick_port', 'rec_sec', 'max_queue', 'sleep_sec', 'reconf_sec', 'size_x', 'size_y', 'numLast'
 required_config_dir = 'logfile', 'stop_file', 'pause_file', 'data_dir'
 required_cam = 'mjpeg', 'audio', 'read', 'fps'
