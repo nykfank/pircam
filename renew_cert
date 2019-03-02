@@ -1,4 +1,5 @@
 #!/bin/sh
+# Copy to /etc/cron.daily/renew_cert
 /usr/bin/certbot renew
 cat /etc/letsencrypt/live/example.org/cert.pem /etc/letsencrypt/live/example.org/privkey.pem >/etc/letsencrypt/live/example.org/web.pem
 service lighttpd restart
