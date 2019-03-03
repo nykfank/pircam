@@ -1,6 +1,5 @@
 GLOBAL
 logfile     = /var/log/pircam_log.txt
-stop_file   = /tmp/pircam_stop
 pause_file  = /tmp/pircam_pause
 data_dir    = /home
 webRoot     = /home/www
@@ -20,7 +19,6 @@ size_y      = 720
 numLast     = 150
 db_fn       = /opt/bitrate.db
 verbose     = False
-fork		= False
 
 CAMERA
 netcam

@@ -3,7 +3,7 @@
 # pircam, 2019 by Niklaus Fankhauser
 # Motion detection sensor triggered capture and combination of MJPEG video and audio from D-Link network cameras.
 
-import os, sys, time, threading, urllib, subprocess, xmpp, sqlite3
+import os, sys, time, threading, urllib, subprocess, xmpp, sqlite3, signal
 from tinkerforge.ip_connection import IPConnection
 from tinkerforge.bricklet_motion_detector import BrickletMotionDetector
 from tinkerforge.bricklet_motion_detector_v2 import BrickletMotionDetectorV2
@@ -16,6 +16,14 @@ video_queue, audio_queue = {}, {} # One queue per camera
 sensorAPI = {} # Motion detector dictionary
 cbFuns = {} # Callback function dictionary
 ipcon = {} # TCP/IP connections
+
+class GracefulKiller:
+	kill_now = False
+	def __init__(self):
+		signal.signal(signal.SIGINT, self.exit_gracefully)
+		signal.signal(signal.SIGTERM, self.exit_gracefully)
+	def exit_gracefully(self,signum, frame):
+		self.kill_now = True
 
 def load_config(fn, section):
 	"""Load specified section of config file into dictionary."""
@@ -241,8 +249,6 @@ def configure_motion_detector(uid):
 sensors = load_config(config_file, 'SENSOR')
 cameras = load_config(config_file, 'CAMERA')
 config  = load_config(config_file, 'GLOBAL')
-if config['fork'] == 'True':
-	if os.fork(): sys.exit() # Run as daemon
 logg('%d sensors, %d cameras' % (len(sensors), len(cameras)))
 
 # Create IP connections to all bricks required by the sensors
@@ -258,6 +264,7 @@ for uid in sensors.keys():
 logg('IP connections: %d' % len(ipcon))
 
 reconfigure_time = time.time()
+killer = GracefulKiller()
 while True: # Main loop
 	threading.Event().wait(int(config['sleep_sec'])) # Sleep, but wake for events.
 	# Start convert thread per camera, if there are videos queued and system is idle.
@@ -268,7 +275,7 @@ while True: # Main loop
 			current_convert_thread = threading.Thread(target=run_converter, args=[CAMID])
 			current_convert_thread.start()
 			break
-	if is_idle() and os.path.isfile(config['stop_file']): break # Terminate
+	if is_idle() and killer.kill_now: break # Terminate
 	# Check for bricklet reset and reconfigure if needed (status LED on).
 	if reconfigure_time + int(config['reconf_sec']) < time.time():
 		for uid in sensors.keys():

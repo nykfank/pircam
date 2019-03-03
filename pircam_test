@@ -105,11 +105,11 @@ cameras = load_config(config_file, 'CAMERA')
 config  = load_config(config_file, 'GLOBAL')
 print '%d sensors, %d cameras' % (len(sensors), len(cameras))
 
-required_config = 'logfile', 'stop_file', 'pause_file', 'data_dir', 'webRoot', 'brick_port', 
+required_config = 'logfile', 'pause_file', 'data_dir', 'webRoot', 'brick_port', 
 'webserver', 'rec_sec', 'max_queue', 'sleep_sec', 'reconf_sec', 'verbose', 'db_fn'
-'xmpp_to', 'xmpp_from', 'xmpp_pass', 'xmpp_server', 'size_x', 'size_y', 'numLast', 'fork'
+'xmpp_to', 'xmpp_from', 'xmpp_pass', 'xmpp_server', 'size_x', 'size_y', 'numLast'
 required_config_int = 'brick_port', 'rec_sec', 'max_queue', 'sleep_sec', 'reconf_sec', 'size_x', 'size_y', 'numLast'
-required_config_dir = 'logfile', 'stop_file', 'pause_file', 'data_dir'
+required_config_dir = 'logfile', 'pause_file', 'data_dir', 'db_fn'
 required_cam = 'mjpeg', 'audio', 'read', 'fps'
 required_cam_int = 'read', 'fps'
 required_sensor = 'cam', 'ip', 'vers'
