@@ -38,7 +38,7 @@ guides(fill=guide_legend(title=NULL)) +
 theme(
 	axis.text=element_text(size=28), 
 	axis.title=element_text(size=32), 
-	strip.text.y=element_text(size=32), 
+	strip.text.y=element_text(size=24), 
 	legend.text=element_text(size=20),
 	legend.position = "bottom"
 	)
@@ -47,7 +47,7 @@ theme(
 png(filename=outfile, width=1440, height=2560) # Optimal for mobile
 print(p)
 dev.off()
-png(filename=outfile_wide, width=1280, height=720) # Optimal for laptop
+png(filename=outfile_wide, width=1920, height=1080) # Optimal for laptop
 print(p)
 dev.off()
 
