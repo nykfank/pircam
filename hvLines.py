@@ -1,30 +1,20 @@
 #!/usr/bin/python
-import Image, sys, math, numpy, scipy.stats, shutil
-ifn = sys.argv[1]
-i = Image.open(ifn)
-s = i.size
-im = Image.new('RGB', s)
-for x in range(s[0]):
-	for y in range(s[1]):
-		p = i.getpixel((x, y))
-		if y > 1:
-			p1 = i.getpixel((x, y-1))
-			p2 = i.getpixel((x, y))
-			d = int(math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2 + (p1[2] - p2[2])**2))
-			im.putpixel((x,y), (d,d,d))
+import sys, numpy, scipy.stats, shutil, cv2, os
+thr = 4
+odir = '/tmp/broken/'
+if not os.path.isdir(odir): os.mkdir(odir)
 
-im.save('foo.png')
-ddl = []
-for y in range(s[1]):
-	dd = 0
-	for x in range(s[0]): dd += im.getpixel((x, y))[0]
-	ddl.append(dd/s[0])
-sddl = sorted(ddl)
-iqr = scipy.stats.iqr(ddl)
-median = numpy.median(ddl)
-#print 'Median:', median
-#print 'IQR:', iqr
-#print sddl
-lines = filter(lambda x : x > median + 4 * iqr, sddl)
-print ifn, lines
-if len(lines) > 0: shutil.copy(ifn, 'line/'+ifn)
+# Load image and convert to 64bit integer
+ifn = sys.argv[1]
+img = cv2.imread(ifn, cv2.IMREAD_GRAYSCALE)
+img = numpy.int64(img)
+
+# Horizontal artefacts
+img_downshifted = numpy.roll(img, 1, axis = 0) # Shift down
+diff_down = abs(numpy.subtract(img, img_downshifted))
+row_sum = numpy.sum(diff_down, axis=1) / img.shape[0]
+row_sum[0] = 0 # Top row of shifted image is bottom row
+artefact_rows = [ i for i, x in enumerate(row_sum) if x > numpy.median(row_sum) + thr * scipy.stats.iqr(row_sum) ]
+
+print ifn, artefact_rows
+if len(artefact_rows) > 0: shutil.move(ifn, odir + ifn)
