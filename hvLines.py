@@ -18,6 +18,7 @@ def find_jpeg_artefacts(ifn):
 
 for fn in os.listdir(indir):
 	fpath = '%s/%s' % (indir, fn)
+	opath = '%s/%s' % (odir, fn)
 	artefact_rows = find_jpeg_artefacts(fpath)
 	print fn, artefact_rows
-	if len(artefact_rows) > 0: shutil.move(fpath, '%s/%s' % (odir, ifn))
+	if len(artefact_rows) > 0: shutil.move(fpath, opath)
