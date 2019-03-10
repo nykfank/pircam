@@ -8,7 +8,8 @@ indir = sys.argv[1]
 def find_jpeg_artefacts(ifn):
 	# Load image and convert to 64bit integer
 	img = cv2.imread(ifn, cv2.IMREAD_GRAYSCALE)
-	img = numpy.int64(img)
+	try: img = numpy.int64(img)
+	except: return [0]
 	# Horizontal artefacts
 	img_downshifted = numpy.roll(img, 1, axis = 0) # Shift down
 	diff_down = abs(numpy.subtract(img, img_downshifted))
@@ -21,4 +22,4 @@ for fn in os.listdir(indir):
 	opath = '%s/%s' % (odir, fn)
 	artefact_rows = find_jpeg_artefacts(fpath)
 	print fn, artefact_rows
-	if len(artefact_rows) > 0: shutil.move(fpath, opath)
+	#if len(artefact_rows) > 0: shutil.move(fpath, opath)
