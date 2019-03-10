@@ -1,27 +1,30 @@
 #!/usr/bin/python
 import sys, numpy, scipy.stats, shutil, cv2, os, skimage.measure
-
 odir = '/tmp/broken'
 if not os.path.isdir(odir): os.mkdir(odir)
 indir = sys.argv[1]
-thr = 100
-
+thr = 20
 
 def seq_ssimscores(infiles):
 	scorelist = []
 	num_comparison = len(infiles) - 1
 	for i in range(num_comparison):
-		fn1 = infiles[i]
-		fn2 = infiles[i+1]
-		fpath1 = '%s/%s' % (indir, fn1)
-		fpath2 = '%s/%s' % (indir, fn2)
-		opath = '%s/%s' % (odir, fn2)
+		fpath1 = '%s/%s' % (indir, infiles[i])
+		fpath2 = '%s/%s' % (indir, infiles[i+1])
 		img1 = cv2.imread(fpath1)
 		img2 = cv2.imread(fpath2)
 		score = skimage.measure.compare_ssim(img1, img2, multichannel=True)
-		print i+1, num_comparison, fn1, fn2, score
+		#print i + 1, num_comparison, score
 		scorelist.append(score)
-	return [ i+1 for i, x in enumerate(scorelist) if x < numpy.median(scorelist) - thr * scipy.stats.iqr(scorelist) ]
+	return [ i + 1 for i, x in enumerate(scorelist) if x < numpy.median(scorelist) - thr * scipy.stats.iqr(scorelist) ]
+
+def detect_outliers(vidfiles):
+	badfiles = []
+	while True:
+		outliers = seq_ssimscores(vidfiles)
+		if len(outliers) == 0: return badfiles
+		badfiles.append(vidfiles[outliers[0]])
+		del vidfiles[outliers[0]]
 
 infiles = sorted(os.listdir(indir))
 invids = {}
@@ -30,14 +33,8 @@ for fn in infiles:
 	if not invids.has_key(vkey): invids[vkey] = []
 	invids[vkey].append(fn)
 print 'Images: %d, videos: %d' % (len(infiles), len(invids))
+
 for vkey, vidfiles in invids.items():
-	print 'Video', vkey
-	badfiles = []
-	while True:
-		outliers = seq_ssimscores(vidfiles)
-		if len(outliers) == 0: break
-		badfiles.append(vidfiles[outliers[0]])
-		del vidfiles[outliers[0]]
-		print 'bad:', badfiles
+	badfiles = detect_outliers(vidfiles)
 	for fn in badfiles: shutil.move('%s/%s' % (indir, fn), '%s/%s' % (odir, fn))
-	print 'Moved %d images' % len(badfiles)
+	print '%s: moved %d of %d images' % (vkey, len(badfiles), len(vidfiles))
