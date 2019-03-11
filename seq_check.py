@@ -4,7 +4,7 @@ odir = '/tmp/broken'
 if not os.path.isdir(odir): os.mkdir(odir)
 indir = sys.argv[1]
 #thr = 50
-thr = 0.1
+thr = 0.15
 
 def seq_ssimscores(infiles):
 	scorelist = []
@@ -37,6 +37,7 @@ for fn in infiles:
 print 'Images: %d, videos: %d' % (len(infiles), len(invids))
 
 for vkey, vidfiles in invids.items():
+	nb_vids = len(vidfiles)
 	badfiles = detect_outliers(vidfiles)
 	for fn in badfiles: shutil.move('%s/%s' % (indir, fn), '%s/%s' % (odir, fn))
-	print '%s: moved %d of %d images' % (vkey, len(badfiles), len(vidfiles))
+	print '%s: moved %d of %d images' % (vkey, len(badfiles), nb_vids)
