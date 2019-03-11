@@ -7,9 +7,8 @@ library(suncalc)
 indir <- sprintf("/mnt/big/nick/cams/%s", camID)
 writeLines(sprintf("Movie directory: %s", indir))
 tempTextFile <- sprintf("/tmp/vidfiles%d.txt", as.integer(Sys.time()))
-sampleSize <- 60
-seconds_per_video <- 4
-speedup <- 4
+sampleSize <- 30
+seconds_per_video <- 3
 video <- data.table(datei = list.files(indir, pattern="ogg"))
 stopifnot(nrow(video) > 0)
 video[, zeit := as.POSIXct(sub("netcam", "", datei), tz="", "%Y%m%d_%H%M%S")]

@@ -1,10 +1,9 @@
 #!/usr/bin/python
-import sys, numpy, scipy.stats, shutil, cv2, os, skimage.measure
+import sys, numpy, shutil, cv2, os, skimage.measure
 odir = '/tmp/broken'
 if not os.path.isdir(odir): os.mkdir(odir)
 indir = sys.argv[1]
-#thr = 50
-thr = 0.15
+thr = 0.1
 
 def seq_ssimscores(infiles):
 	scorelist = []
@@ -15,9 +14,7 @@ def seq_ssimscores(infiles):
 		img1 = cv2.imread(fpath1)
 		img2 = cv2.imread(fpath2)
 		score = skimage.measure.compare_ssim(img1, img2, multichannel=True)
-		#print i + 1, num_comparison, score
 		scorelist.append(score)
-	#return [ i + 1 for i, x in enumerate(scorelist) if x < numpy.median(scorelist) - thr * scipy.stats.iqr(scorelist) ]
 	return [ i + 1 for i, x in enumerate(scorelist) if x < numpy.median(scorelist) - thr ]
 
 def detect_outliers(vidfiles):
