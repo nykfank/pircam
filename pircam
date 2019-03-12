@@ -176,9 +176,9 @@ def run_converter(CAMID):
 			video_time = unixtime(filebase(vfn))
 			audio_diff = [abs(unixtime(i) - video_time) for i in audio_base]
 			afn = local_audio_queue[audio_diff.index(min(audio_diff))]			
-			cmd = 'ffmpeg', '-hide_banner', '-loglevel', 'panic', '-y', '-r', str(fps), '-i', vfn, '-i', afn, '-codec:v', 'libtheora', '-qscale:v', '7', ofn
+			cmd = 'ffmpeg', '-hide_banner', '-loglevel', 'panic', '-y', '-r', str(fps), '-fflags', 'discardcorrupt', '-i', vfn, '-i', afn, '-codec:v', 'libtheora', '-qscale:v', '7', ofn
 		else:
-			cmd = 'ffmpeg', '-hide_banner', '-loglevel', 'panic', '-y', '-r', str(fps), '-i', vfn, '-codec:v', 'libtheora', '-qscale:v', '7', ofn
+			cmd = 'ffmpeg', '-hide_banner', '-loglevel', 'panic', '-y', '-r', str(fps), '-fflags', 'discardcorrupt', '-i', vfn, '-codec:v', 'libtheora', '-qscale:v', '7', ofn
 		log_and_run(cmd)
 		if not os.path.isfile(ofn):
 			logg('%s: Failed to create %s!' % (CAMID, ofn))
