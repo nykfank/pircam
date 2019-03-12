@@ -6,9 +6,11 @@ library(data.table)
 library(suncalc)
 indir <- sprintf("/mnt/big/nick/cams/%s", camID)
 writeLines(sprintf("Movie directory: %s", indir))
+outfile <- sprintf("sampled_%s.mp4", basename(indir))
 tempTextFile <- sprintf("/tmp/vidfiles%d.txt", as.integer(Sys.time()))
 sampleSize <- 30
 seconds_per_video <- 3
+out_fps <- 16
 video <- data.table(datei = list.files(indir, pattern="ogg"))
 stopifnot(nrow(video) > 0)
 video[, zeit := as.POSIXct(sub("netcam", "", datei), tz="", "%Y%m%d_%H%M%S")]
@@ -34,3 +36,10 @@ for (v in video[wahl==TRUE, datei]) {
 	system(cmd)
 }
 
+cmd <- sprintf("seq_check.py %s", framedir)
+writeLines(cmd)
+system(cmd)
+cmd <- sprintf("ffmpeg -hide_banner -loglevel panic -y -r %d -i %s/*_%%05d.png -codec:v libtheora -qscale:v 7 %s",
+	out_fps, framedir, outfile)
+writeLines(cmd)
+system(cmd)
