@@ -39,7 +39,13 @@ for (v in video[wahl==TRUE, datei]) {
 cmd <- sprintf("seq_check.py %s", framedir)
 writeLines(cmd)
 system(cmd)
-cmd <- sprintf("ffmpeg -hide_banner -loglevel panic -y -r %d -i %s/*_%%05d.png -codec:v libtheora -qscale:v 7 %s",
+
+framefiles <- list.files(framedir, full.names = TRUE)
+for (i in 1:length(framefiles)) {
+	file.rename(framefiles[i], sprintf("%s/frame%05d.png", framedir, i))
+}
+
+cmd <- sprintf("ffmpeg -hide_banner -loglevel panic -y -r %d -i %s/frame%%05d.png -codec:v libtheora -qscale:v 7 %s",
 	out_fps, framedir, outfile)
 writeLines(cmd)
 system(cmd)
