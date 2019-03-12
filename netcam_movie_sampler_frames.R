@@ -6,7 +6,7 @@ library(data.table)
 library(suncalc)
 indir <- sprintf("/mnt/big/nick/cams/%s", camID)
 writeLines(sprintf("Movie directory: %s", indir))
-outfile <- sprintf("sampled_%s.mp4", basename(indir))
+outfile <- sprintf("sampled_%s.ogg", basename(indir))
 tempTextFile <- sprintf("/tmp/vidfiles%d.txt", as.integer(Sys.time()))
 sampleSize <- 30
 seconds_per_video <- 3
@@ -45,7 +45,7 @@ for (i in 1:length(framefiles)) {
 	file.rename(framefiles[i], sprintf("%s/frame%05d.png", framedir, i))
 }
 
-cmd <- sprintf("ffmpeg -hide_banner -loglevel panic -y -r %d -i %s/frame%%05d.png -codec:v libtheora -qscale:v 7 %s",
+cmd <- sprintf("ffmpeg -hide_banner -loglevel panic -y -framerate %d -i %s/frame%%05d.png -codec:v libtheora -qscale:v 7 %s",
 	out_fps, framedir, outfile)
 writeLines(cmd)
 system(cmd)
