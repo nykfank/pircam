@@ -10,6 +10,7 @@ outfile <- sprintf("sampled_%s.ogg", basename(indir))
 tempTextFile <- sprintf("/tmp/vidfiles%d.txt", as.integer(Sys.time()))
 sampleSize <- 30
 seconds_per_video <- 3
+in_fps <- 4
 out_fps <- 16
 video <- data.table(datei = list.files(indir, pattern="ogg"))
 stopifnot(nrow(video) > 0)
@@ -51,7 +52,16 @@ for (i in 1:length(framefiles)) {
 	file.rename(framefiles[i], sprintf("%s/frame%05d.png", framedir, i))
 }
 
-cmd <- sprintf("ffmpeg -hide_banner -loglevel panic -y -framerate %d -i %s/frame%%05d.png -codec:v libtheora -qscale:v 7 %s",
-	out_fps, framedir, outfile)
+audiofiles <- list.files(audiodir, full.names = TRUE)
+for (i in 1:length(audiofiles)) {
+	if (i %% floor(out_fps / in_fps) == 0) {
+		file.rename(audiofiles[i], sprintf("%s/audio%05d.png", audiodir, i))
+	} else {
+		unlink(audiofiles[i])
+	}
+}
+
+cmd <- sprintf("ffmpeg -hide_banner -loglevel panic -y -framerate %d -i %s/frame%%05d.png -i %s/audio%%05d.png -codec:v libtheora -qscale:v 7 %s",
+	out_fps, framedir, audiodir, outfile)
 writeLines(cmd)
 system(cmd)
