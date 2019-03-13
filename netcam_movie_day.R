@@ -37,7 +37,7 @@ for (v in video[wahl==TRUE, datei]) {
 
 mergefiles <- sprintf("file '/tmp/%s'", video[wahl==TRUE, datei])
 write(mergefiles, file=tempTextFile)
-outfile <- sprintf("%s%d.ogg", camID, as.integer(Sys.time()))
+outfile <- sprintf("%s_%s.ogg", camID, sel_day)
 if (speedup == 1) cmd <- sprintf('ffmpeg -hide_banner -loglevel panic -y -f concat -safe 0 -i %s -qscale:v 7 %s', tempTextFile, outfile)
 if (speedup == 2) cmd <- sprintf('ffmpeg -hide_banner -loglevel panic -y -f concat -safe 0 -i %s -filter:v "setpts=0.5*PTS" -filter:a "atempo=2.0" -qscale:v 7 %s', tempTextFile, outfile)
 if (speedup == 4) cmd <- sprintf('ffmpeg -hide_banner -loglevel panic -y -f concat -safe 0 -i %s -filter:v "setpts=0.25*PTS" -filter:a "atempo=2.0,atempo=2.0" -qscale:v 7 %s', tempTextFile, outfile)

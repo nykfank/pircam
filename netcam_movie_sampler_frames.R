@@ -28,10 +28,16 @@ video[tag==TRUE, wahl := id %in% sample(1:nrow(video[tag == TRUE,]), sampleSize)
 video[is.na(wahl), "wahl"] <- FALSE
 print(table(video$tag, video$wahl, dnn=c("tag", "wahl")))
 framedir <- sprintf("/tmp/frames_%d", as.integer(Sys.time()))
+audiodir <- sprintf("/tmp/audio_%d", as.integer(Sys.time()))
 dir.create(framedir)
+dir.create(audiodir)
 for (v in video[wahl==TRUE, datei]) {
 	cmd <- sprintf("ffmpeg -hide_banner -loglevel panic -i %s/%s -to 00:00:%02d %s/%s_%%05d.png",
 	indir, v, seconds_per_video, framedir, tools::file_path_sans_ext(v))
+	writeLines(cmd)
+	system(cmd)
+	cmd <- sprintf("ffmpeg -hide_banner -loglevel panic -i %s/%s -to 00:00:%02d -vn -acodec copy %s/%s.mp4",
+	indir, v, seconds_per_video, audiodir, tools::file_path_sans_ext(v))
 	writeLines(cmd)
 	system(cmd)
 }
