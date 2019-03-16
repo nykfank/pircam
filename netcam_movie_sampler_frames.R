@@ -45,7 +45,7 @@ for (v in video[wahl==TRUE, datei]) {
 
 cmd <- sprintf("seq_check.py %s", framedir)
 writeLines(cmd)
-system(cmd)
+#system(cmd)
 
 framefiles <- list.files(framedir, full.names = TRUE)
 for (i in 1:length(framefiles)) {
@@ -53,15 +53,17 @@ for (i in 1:length(framefiles)) {
 }
 
 audiofiles <- list.files(audiodir, full.names = TRUE)
-for (i in 1:length(audiofiles)) {
-	if (i %% floor(out_fps / in_fps) == 0) {
-		file.rename(audiofiles[i], sprintf("%s/audio%05d.png", audiodir, i))
-	} else {
-		unlink(audiofiles[i])
-	}
-}
+audiofiles_selected <- audiofiles[1:length(audiofiles) %% (floor(out_fps / in_fps) - 1) == 0]
+mergefiles <- sprintf("file '%s'", audiofiles_selected)
+tempTextFile <- sprintf("/tmp/vidfiles%d.txt", as.integer(Sys.time()))
+write(mergefiles, file=tempTextFile)
+merged_audio_file <- sprintf("/tmp/audio%d.mp4", as.integer(Sys.time()))
 
-cmd <- sprintf("ffmpeg -hide_banner -loglevel panic -y -framerate %d -i %s/frame%%05d.png -i %s/audio%%05d.png -codec:v libtheora -qscale:v 7 %s",
-	out_fps, framedir, audiodir, outfile)
+cmd <- sprintf("ffmpeg -f concat -safe 0 -i %s -c copy %s", tempTextFile, merged_audio_file)
+writeLines(cmd)
+system(cmd)
+
+cmd <- sprintf("ffmpeg -y -framerate %d -i %s/frame%%05d.png -i %s -codec:v libtheora -qscale:v 7 %s",
+	out_fps, framedir, merged_audio_file, outfile)
 writeLines(cmd)
 system(cmd)
