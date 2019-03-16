@@ -8,7 +8,7 @@ indir <- sprintf("/mnt/big/nick/cams/%s", camID)
 writeLines(sprintf("Movie directory: %s", indir))
 outfile <- sprintf("sampled_%s.ogg", basename(indir))
 tempTextFile <- sprintf("/tmp/vidfiles%d.txt", as.integer(Sys.time()))
-sampleSize <- 30
+sampleSize <- 50
 seconds_per_video <- 3
 in_fps <- 4
 out_fps <- 16
@@ -59,7 +59,7 @@ tempTextFile <- sprintf("/tmp/vidfiles%d.txt", as.integer(Sys.time()))
 write(mergefiles, file=tempTextFile)
 merged_audio_file <- sprintf("/tmp/audio%d.mp4", as.integer(Sys.time()))
 
-cmd <- sprintf("ffmpeg -hide_banner -loglevel panic -f concat -safe 0 -i %s -c copy %s", tempTextFile, merged_audio_file)
+cmd <- sprintf("ffmpeg -hide_banner -loglevel panic -f concat -safe 0 -i %s %s", tempTextFile, merged_audio_file)
 writeLines(cmd)
 system(cmd)
 
