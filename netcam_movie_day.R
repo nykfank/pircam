@@ -6,6 +6,7 @@ if (!exists("sel_day")) sel_day <- args[2]
 sel_day <- as.Date(sel_day)
 library(data.table)
 library(suncalc)
+ffmpeg <- "/usr/bin/ffmpeg -hide_banner -loglevel panic"
 indir <- sprintf("/mnt/big/nick/cams/%s", camID)
 writeLines(sprintf("Movie directory: %s", indir))
 tempTextFile <- sprintf("/tmp/vidfiles%d.txt", as.integer(Sys.time()))
@@ -30,7 +31,7 @@ print(table(video$tag, video$wahl, dnn=c("tag", "wahl")))
 stopifnot(nrow(video[wahl==TRUE,]) > 0)
 
 for (v in video[wahl==TRUE, datei]) {
-	cmd <- sprintf("ffmpeg -hide_banner -loglevel panic -y -err_detect ignore_err -i %s/%s -to 00:00:%02d -c copy /tmp/%s", indir, v, seconds_per_video, v)
+	cmd <- sprintf("%s -y -err_detect ignore_err -i %s/%s -to 00:00:%02d -c copy /tmp/%s", ffmpeg, indir, v, seconds_per_video, v)
 	writeLines(cmd)
 	system(cmd)
 }
@@ -38,8 +39,8 @@ for (v in video[wahl==TRUE, datei]) {
 mergefiles <- sprintf("file '/tmp/%s'", video[wahl==TRUE, datei])
 write(mergefiles, file=tempTextFile)
 outfile <- sprintf("%s_%s.ogg", camID, sel_day)
-if (speedup == 1) cmd <- sprintf('ffmpeg -hide_banner -loglevel panic -y -f concat -safe 0 -i %s -qscale:v 7 %s', tempTextFile, outfile)
-if (speedup == 2) cmd <- sprintf('ffmpeg -hide_banner -loglevel panic -y -f concat -safe 0 -i %s -filter:v "setpts=0.5*PTS" -filter:a "atempo=2.0" -qscale:v 7 %s', tempTextFile, outfile)
-if (speedup == 4) cmd <- sprintf('ffmpeg -hide_banner -loglevel panic -y -f concat -safe 0 -i %s -filter:v "setpts=0.25*PTS" -filter:a "atempo=2.0,atempo=2.0" -qscale:v 7 %s', tempTextFile, outfile)
+if (speedup == 1) cmd <- sprintf('%s -y -f concat -safe 0 -i %s -qscale:v 7 %s', ffmpeg, tempTextFile, outfile)
+if (speedup == 2) cmd <- sprintf('%s -y -f concat -safe 0 -i %s -filter:v "setpts=0.5*PTS" -filter:a "atempo=2.0" -qscale:v 7 %s', ffmpeg, tempTextFile, outfile)
+if (speedup == 4) cmd <- sprintf('%s -y -f concat -safe 0 -i %s -filter:v "setpts=0.25*PTS" -filter:a "atempo=2.0,atempo=2.0" -qscale:v 7 %s', ffmpeg, tempTextFile, outfile)
 writeLines(cmd)
 system(cmd)

@@ -106,33 +106,12 @@ def timeFormat(x):
 	"""Convert YYYYMMDD_HHMMSS to YYYY-MM-DD_HH:MM:SS"""
 	return time.strftime('%Y-%m-%d %H:%M:%S', time.strptime(filebase(x), "%Y%m%d_%H%M%S"))
 
-def get_rate(mfn, ofn):
-	return int(100 * float(os.stat(ofn).st_size) / float(os.stat(mfn).st_size))
-
-def rate_to_db(fn, rate):
-	db = sqlite3.connect(config['db_fn'])
-	dbc = db.cursor()
-	fn2 = fn.replace(config['data_dir'] + '/', '')
-	dbc.execute('INSERT INTO files (fn, rate) VALUES (?,?)',(fn2, rate))
-	db.commit()
-	db.close()
-
-def rate_from_db(fn):
-	db = sqlite3.connect(config['db_fn'])
-	dbc = db.cursor()
-	fn2 = fn.replace(config['data_dir'] + '/', '')
-	dbc.execute('SELECT rate FROM files WHERE fn = ?', (fn2,))
-	r = dbc.fetchone()
-	db.close()
-	if not r: return 0
-	return r[0]
-
 def index_element(fpath):
 	"""Generates variables required for an element in photoswipe."""
 	src = fpath.replace(config['data_dir'], '')
 	w, h = config['size_x'], config['size_y']
 	video = src.replace('jpg', 'ogg').strip('/')
-	title = '%s (%d%%)' % (timeFormat(fpath), rate_from_db(video))
+	title = timeFormat(fpath)
 	pid = filebase(fpath)
 	return "{src:'%s', w:%s, h:%s, title:'%s', video:'%s', pid:'%s'}" % (src, w, h, title, video, pid)
 
@@ -186,8 +165,6 @@ def run_converter(CAMID):
 		logg('%s: Video of %2.2f MB created at %s' % (CAMID, os.stat(ofn).st_size/1024.0/1024.0, ofn))
 		upload_to_webserver(ofn, '%s/%s' % (config['data_dir'], CAMID))
 		upload_to_webserver(jfn, '%s/%s' % (config['data_dir'], CAMID))
-		comp_ratio = get_rate(vfn, ofn)
-		rate_to_db(ofn, comp_ratio)
 	cameras[CAMID]['read'] = int(int(cameras[CAMID]['read']) * int(config['rec_sec']) / video_sec)
 	if cameras[CAMID]['read'] > int(config['max_down']): cameras[CAMID]['read'] = int(config['max_down'])
 	if config['verbose'] == 'True': logg('%s: New MJPEG read length is %2.2f MB' % (CAMID, cameras[CAMID]['read']/1024.0/1024.0))

@@ -4,11 +4,12 @@ args <- commandArgs(trailingOnly=TRUE)
 if (!exists("camID")) camID <- args[1]
 library(data.table)
 library(suncalc)
+ffmpeg <- "/usr/bin/ffmpeg -hide_banner -loglevel panic"
 indir <- sprintf("/mnt/big/nick/cams/%s", camID)
 writeLines(sprintf("Movie directory: %s", indir))
 outfile <- sprintf("sampled_%s.ogg", basename(indir))
 tempTextFile <- sprintf("/tmp/vidfiles%d.txt", as.integer(Sys.time()))
-sampleSize <- 50
+sampleSize <- 60
 seconds_per_video <- 3
 in_fps <- 4
 out_fps <- 16
@@ -33,12 +34,11 @@ audiodir <- sprintf("/tmp/audio_%d", as.integer(Sys.time()))
 dir.create(framedir)
 dir.create(audiodir)
 for (v in video[wahl==TRUE, datei]) {
-	cmd <- sprintf("ffmpeg -hide_banner -loglevel panic -i %s/%s -to 00:00:%02d %s/%s_%%05d.png",
-	indir, v, seconds_per_video, framedir, tools::file_path_sans_ext(v))
+	vbase <- tools::file_path_sans_ext(v)
+	cmd <- sprintf("%s -i %s/%s -to 00:00:%02d %s/%s_%%05d.png", ffmpeg, indir, v, seconds_per_video, framedir, vbase)
 	writeLines(cmd)
 	system(cmd)
-	cmd <- sprintf("ffmpeg -hide_banner -loglevel panic -i %s/%s -to 00:00:%02d -vn -acodec copy %s/%s.mp4",
-	indir, v, seconds_per_video, audiodir, tools::file_path_sans_ext(v))
+	cmd <- sprintf("%s -i %s/%s -to 00:00:%02d -vn -acodec copy %s/%s.mp4",	ffmpeg, indir, v, seconds_per_video, audiodir, vbase)
 	writeLines(cmd)
 	system(cmd)
 }
@@ -59,11 +59,11 @@ tempTextFile <- sprintf("/tmp/vidfiles%d.txt", as.integer(Sys.time()))
 write(mergefiles, file=tempTextFile)
 merged_audio_file <- sprintf("/tmp/audio%d.mp4", as.integer(Sys.time()))
 
-cmd <- sprintf("ffmpeg -hide_banner -loglevel panic -f concat -safe 0 -i %s %s", tempTextFile, merged_audio_file)
+cmd <- sprintf("%s -f concat -safe 0 -i %s %s", ffmpeg, tempTextFile, merged_audio_file)
 writeLines(cmd)
 system(cmd)
 
-cmd <- sprintf("ffmpeg -hide_banner -loglevel panic -y -framerate %d -i %s/frame%%05d.png -i %s -codec:v libtheora -qscale:v 7 %s",
-	out_fps, framedir, merged_audio_file, outfile)
+cmd <- sprintf("%s -y -framerate %d -i %s/frame%%05d.png -i %s -codec:v libtheora -qscale:v 7 %s",
+	ffmpeg, out_fps, framedir, merged_audio_file, outfile)
 writeLines(cmd)
 system(cmd)
