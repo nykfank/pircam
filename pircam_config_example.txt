@@ -17,8 +17,9 @@ xmpp_server = example.org
 size_x      = 1280
 size_y      = 720
 numLast     = 150
-db_fn       = /opt/bitrate.db
 verbose     = False
+check_sec   = 3600
+warning_sec = 3600
 
 CAMERA
 netcam
