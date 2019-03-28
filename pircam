@@ -16,6 +16,7 @@ video_queue, audio_queue = {}, {} # One queue per camera
 sensorAPI = {} # Motion detector dictionary
 cbFuns = {} # Callback function dictionary
 ipcon = {} # TCP/IP connections
+cam_offline_time = {} # Dictionary for times in seconds cameras are offline
 
 class GracefulKiller:
 	kill_now = False
@@ -222,6 +223,25 @@ def configure_motion_detector(uid):
 	sensorAPI[uid].register_callback(sensorAPI[uid].CALLBACK_MOTION_DETECTED, cbFuns[uid]) # Register callback function
 	logg('Callback for %s at %s to %s registered' % (uid, sensors[uid]['ip'], sensors[uid]['cam']))
 
+def is_camera_online(CAMID):
+	try: stream = urllib.urlopen(cameras[CAMID]['mjpeg']).read(200)
+	except: return False
+	if 'jpeg' in stream: return True
+	return False
+
+def check_camera_status():
+	global cam_offline_time
+	for CAMID in cameras.keys():
+		now = time.time()
+		offline_sec = now - cam_offline_time.get(CAMID, now)
+		jtext = '%s offline for %2.1f hours!' % (CAMID, offline_sec / 3600)
+		if is_camera_online(CAMID) == True: cam_offline_time.pop(CAMID, None)
+		else:
+			if offline_sec >= int(config['warning_sec']): 
+				send_jabber(jtext)
+				logg(jtext)
+			cam_offline_time[CAMID] = time.time()
+
 # Load configuration into dictionaries
 sensors = load_config(config_file, 'SENSOR')
 cameras = load_config(config_file, 'CAMERA')
@@ -241,6 +261,7 @@ for uid in sensors.keys():
 logg('IP connections: %d' % len(ipcon))
 
 reconfigure_time = time.time()
+check_time = time.time()
 killer = GracefulKiller()
 while True: # Main loop
 	threading.Event().wait(int(config['sleep_sec'])) # Sleep, but wake for events.
@@ -264,5 +285,10 @@ while True: # Main loop
 				logg('%s: Bricklet reset' % uid)
 				configure_motion_detector(uid)
 		reconfigure_time = time.time()
+	# Check if all camera are online and send warning otherwise.
+	if is_idle() and check_time + int(config['check_sec']) < time.time():
+		check_camera_status()
+		check_time = time.time()
+
 for ip in ipcon.keys(): ipcon[ip].disconnect()
 logg('Finished')

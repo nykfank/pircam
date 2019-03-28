@@ -106,10 +106,10 @@ config  = load_config(config_file, 'GLOBAL')
 print '%d sensors, %d cameras' % (len(sensors), len(cameras))
 
 required_config = 'logfile', 'pause_file', 'data_dir', 'webRoot', 'brick_port', 
-'webserver', 'rec_sec', 'max_queue', 'sleep_sec', 'reconf_sec', 'verbose', 'db_fn'
+'webserver', 'rec_sec', 'max_queue', 'sleep_sec', 'reconf_sec', 'verbose'
 'xmpp_to', 'xmpp_from', 'xmpp_pass', 'xmpp_server', 'size_x', 'size_y', 'numLast'
 required_config_int = 'brick_port', 'rec_sec', 'max_queue', 'sleep_sec', 'reconf_sec', 'size_x', 'size_y', 'numLast'
-required_config_dir = 'logfile', 'pause_file', 'data_dir', 'db_fn'
+required_config_dir = 'logfile', 'pause_file', 'data_dir'
 required_cam = 'mjpeg', 'audio', 'read', 'fps'
 required_cam_int = 'read', 'fps'
 required_sensor = 'cam', 'ip', 'vers'
@@ -131,13 +131,6 @@ for i in required_config_dir:
 		print 'GLOBAL configuration key %s directory does not exist: %s' % (i, idir)
 		sys.exit()
 print 'GLOBAL configuration key directory existence: OK'
-
-db = sqlite3.connect(config['db_fn'])
-dbc = db.cursor()
-dbc.execute('CREATE TABLE IF NOT EXISTS files (fn TEXT, rate INTEGER)')
-dbc.execute('CREATE INDEX IF NOT EXISTS files_idx ON files (fn)')
-db.commit()
-db.close()
 
 generate_index_page() # Add some error detection?
 print 'Index page: OK'
