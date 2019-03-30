@@ -32,7 +32,6 @@ mjpeg = http://192.168.1.129/video/mjpg.cgi
 audio = rtsp://192.168.1.129/play1.sdp
 read  = 5000000
 fps   = 5
-sun   = 12:20, 12:21, 12:22, 12:23, 12:24, 12:25, 12:26
 netcam3	
 mjpeg = http://admin:password@192.168.1.138/video1.mjpeg
 audio = rtsp://192.168.1.138/live2.sdp
