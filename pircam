@@ -236,7 +236,8 @@ def check_camera_status():
 			if offline_sec >= int(config['warning_sec']): 
 				send_jabber(jtext)
 				logg(jtext)
-			cam_offline_time[CAMID] = time.time()
+			if not cam_offline_time.has_key(CAMID): 
+				cam_offline_time[CAMID] = time.time()
 
 # Load configuration into dictionaries
 sensors = load_config(config_file, 'SENSOR')
