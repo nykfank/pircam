@@ -13,12 +13,9 @@ sampleSize <- 60
 seconds_per_video <- 3
 in_fps <- 4
 out_fps <- 16
-video <- data.table(datei = list.files(indir, pattern="ogg"))
+video <- data.table(datei = list.files(indir, pattern="mp4|ogg"))
 stopifnot(nrow(video) > 0)
 video[, zeit := as.POSIXct(sub("netcam", "", datei), tz="", "%Y%m%d_%H%M%S")]
-if (camID == "eingang") video <- video[zeit > as.POSIXct('2019-01-28'),] # No audio before this date
-if (camID == "bambus") video <- video[zeit > as.POSIXct('2019-01-31'),] # No audio before this date
-if (camID == "hinterhaus") video <- video[zeit > as.POSIXct('2019-02-08'),] # No audio before this date
 video[, stunde := as.numeric(format(zeit, "%H")) + as.numeric(format(zeit, "%M")) / 60]
 video[, sunrise := getSunlightTimes(date = as.Date(zeit), lat = 46.93, lon = 7.415, tz = "CET")$sunrise]
 video[, sunrise := as.numeric(format(sunrise, "%H")) + as.numeric(format(sunrise, "%M")) / 60]
