@@ -9,7 +9,7 @@ indir <- sprintf("/mnt/big/nick/cams/%s", camID)
 writeLines(sprintf("Movie directory: %s", indir))
 outfile <- sprintf("sampled_%s.ogg", basename(indir))
 tempTextFile <- sprintf("/tmp/vidfiles%d.txt", as.integer(Sys.time()))
-sampleSize <- 60
+sampleSize <- 30
 seconds_per_video <- 3
 in_fps <- 4
 out_fps <- 16
@@ -24,8 +24,20 @@ video[, sunsetStart := as.numeric(format(sunsetStart, "%H")) + as.numeric(format
 video[, tag := stunde > sunrise & stunde < sunsetStart]
 video[tag==TRUE, id := 1:nrow(video[tag == TRUE,])]
 video[tag==TRUE, wahl := id %in% sample(1:nrow(video[tag == TRUE,]), sampleSize)]
-video[is.na(wahl), "wahl"] <- FALSE
+video[is.na(wahl), wahl] <- FALSE # NEW modified without apostrophe
 print(table(video$tag, video$wahl, dnn=c("tag", "wahl")))
+
+# NEW untested block
+for (v in video[wahl==TRUE, datei]) {
+	cmd <- sprintf("ffprobe %s/%s 2>&1", indir, v)
+	writeLines(cmd)
+	r <- system(cmd, intern=TRUE)
+	fpstext <- regmatches(r, regexpr("\\d+ fps", r))
+	fpstext <- sub(" fps", "", fpstext)
+	video[datei == v, fps] <- as.integer(fpstext)[1]
+}
+stop("check fps")
+
 framedir <- sprintf("/tmp/frames_%d", as.integer(Sys.time()))
 audiodir <- sprintf("/tmp/audio_%d", as.integer(Sys.time()))
 dir.create(framedir)
