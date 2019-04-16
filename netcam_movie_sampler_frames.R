@@ -24,7 +24,7 @@ video[, sunsetStart := as.numeric(format(sunsetStart, "%H")) + as.numeric(format
 video[, tag := stunde > sunrise & stunde < sunsetStart]
 video[tag==TRUE, id := 1:nrow(video[tag == TRUE,])]
 video[tag==TRUE, wahl := id %in% sample(1:nrow(video[tag == TRUE,]), sampleSize)]
-video[is.na(wahl), wahl] <- FALSE # NEW modified without apostrophe
+video[is.na(wahl), "wahl"] <- FALSE
 print(table(video$tag, video$wahl, dnn=c("tag", "wahl")))
 
 # NEW untested block
@@ -32,9 +32,11 @@ for (v in video[wahl==TRUE, datei]) {
 	cmd <- sprintf("ffprobe %s/%s 2>&1", indir, v)
 	writeLines(cmd)
 	r <- system(cmd, intern=TRUE)
+	tbrtext <- regmatches(r, regexpr("\\d+ tbr", r))
 	fpstext <- regmatches(r, regexpr("\\d+ fps", r))
-	fpstext <- sub(" fps", "", fpstext)
-	video[datei == v, fps] <- as.integer(fpstext)[1]
+	fps <- as.integer(sub(" fps", "", fpstext))
+	tbr <- as.integer(sub(" tbr", "", tbrtext))
+	if (length(tbr) > 0) video[datei == v, "fps"] <- tbr else video[datei == v, "fps"] <- fps
 }
 stop("check fps")
 
