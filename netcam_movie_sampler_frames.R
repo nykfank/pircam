@@ -11,8 +11,7 @@ outfile <- sprintf("sampled_%s.ogg", basename(indir))
 tempTextFile <- sprintf("/tmp/vidfiles%d.txt", as.integer(Sys.time()))
 sampleSize <- 30
 seconds_per_video <- 3
-in_fps <- 4
-out_fps <- 16
+speedup_factor <- 2
 video <- data.table(datei = list.files(indir, pattern="mp4|ogg"))
 stopifnot(nrow(video) > 0)
 video[, zeit := as.POSIXct(sub("netcam", "", datei), tz="", "%Y%m%d_%H%M%S")]
@@ -38,7 +37,9 @@ for (v in video[wahl==TRUE, datei]) {
 	tbr <- as.integer(sub(" tbr", "", tbrtext))
 	if (length(tbr) > 0) video[datei == v, "fps"] <- tbr else video[datei == v, "fps"] <- fps
 }
-video$fps_ratio <- as.numeric(video$fps / min(video$fps, na.rm = TRUE))
+in_fps <- min(video$fps, na.rm = TRUE)
+out_fps <- in_fps * speedup_factor
+video$fps_ratio <- as.numeric(video$fps / in_fps)
 
 framedir <- sprintf("/tmp/frames_%d", as.integer(Sys.time()))
 audiodir <- sprintf("/tmp/audio_%d", as.integer(Sys.time()))
