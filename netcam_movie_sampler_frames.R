@@ -27,7 +27,7 @@ video[tag==TRUE, wahl := id %in% sample(1:nrow(video[tag == TRUE,]), sampleSize)
 video[is.na(wahl), "wahl"] <- FALSE
 print(table(video$tag, video$wahl, dnn=c("tag", "wahl")))
 
-# NEW untested block
+# Extract FPS for selected videos
 for (v in video[wahl==TRUE, datei]) {
 	cmd <- sprintf("ffprobe %s/%s 2>&1", indir, v)
 	writeLines(cmd)
@@ -38,7 +38,7 @@ for (v in video[wahl==TRUE, datei]) {
 	tbr <- as.integer(sub(" tbr", "", tbrtext))
 	if (length(tbr) > 0) video[datei == v, "fps"] <- tbr else video[datei == v, "fps"] <- fps
 }
-stop("check fps")
+video$fps_ratio <- as.numeric(video$fps / min(video$fps, na.rm = TRUE))
 
 framedir <- sprintf("/tmp/frames_%d", as.integer(Sys.time()))
 audiodir <- sprintf("/tmp/audio_%d", as.integer(Sys.time()))
@@ -52,11 +52,17 @@ for (v in video[wahl==TRUE, datei]) {
 	cmd <- sprintf("%s -i %s/%s -to 00:00:%02d -vn -acodec copy %s/%s.mp4",	ffmpeg, indir, v, seconds_per_video, audiodir, vbase)
 	writeLines(cmd)
 	system(cmd)
+	if (video[datei == v, fps_ratio] > 1) {
+		framefiles <- list.files(framedir, full.names = TRUE, pattern=vbase)
+		for (i in 1:length(framefiles)) {
+			if (i %% video[datei == v, fps_ratio] > 0) unlink(framefiles[i])
+		}
+	}
 }
 
 cmd <- sprintf("seq_check.py %s", framedir)
-writeLines(cmd)
-system(cmd)
+#writeLines(cmd)
+#system(cmd)
 
 framefiles <- list.files(framedir, full.names = TRUE)
 for (i in 1:length(framefiles)) {
