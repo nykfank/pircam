@@ -9,7 +9,7 @@ indir <- sprintf("/mnt/big/nick/cams/%s", camID)
 writeLines(sprintf("Movie directory: %s", indir))
 outfile <- sprintf("sampled_%s.ogg", basename(indir))
 tempTextFile <- sprintf("/tmp/vidfiles%d.txt", as.integer(Sys.time()))
-sampleSize <- 30
+sampleSize <- 60
 seconds_per_video <- 3
 speedup_factor <- 2
 video <- data.table(datei = list.files(indir, pattern="mp4|ogg"))
@@ -62,8 +62,8 @@ for (v in video[wahl==TRUE, datei]) {
 }
 
 cmd <- sprintf("seq_check.py %s", framedir)
-#writeLines(cmd)
-#system(cmd)
+writeLines(cmd)
+system(cmd)
 
 framefiles <- list.files(framedir, full.names = TRUE)
 for (i in 1:length(framefiles)) {
