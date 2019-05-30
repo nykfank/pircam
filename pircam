@@ -137,6 +137,9 @@ def run_converter(CAMID):
 	audio_base = [ filebase(i) for i in local_audio_queue ]
 	fps = int(cameras[CAMID]['fps'])
 	for vfn in local_video_queue:
+		if not os.path.isfile(vfn):
+			logg('%s: Missing video!' % CAMID)
+			continue
 		jfn = '%s/%s/%s.jpg' % (config['data_dir'], CAMID, filebase(vfn))
 		ofn = '%s/%s/%s.ogg' % (config['data_dir'], CAMID, filebase(vfn))
 		mjpeg_data = open(vfn).read()
