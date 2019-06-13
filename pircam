@@ -67,6 +67,7 @@ def download_mjpeg(CAMID):
  
 def log_and_run(cmd):
 	"""Run command using subprocess.call and only log in case of error."""
+	if config['verbose'] == 'True': logg(cmd)
 	rcode = subprocess.call(cmd)
 	if rcode > 0: logg('%s (%d)' % (' '.join(cmd), rcode))
  
@@ -121,10 +122,12 @@ def generate_index_page():
 	path = lambda x : '%s/%s' % (config['data_dir'], x)
 	ftup = [ (f, '%s/%s' % (path(c), f)) for c in cameras.keys() for f in os.listdir(path(c)) if f.endswith('jpg') ]
 	image_paths =  [ fpath for (fn, fpath) in sorted(ftup) ]
+	if config['verbose'] == 'True': logg('Total %d image files' % len(image_paths))
 	elemlist = [ index_element(fpath) for fpath in reversed(image_paths) ]
 	photoswipe_script = 'var items = [\n%s\n];\n' % ',\n'.join(elemlist[:int(config['numLast'])])
 	scriptPath = '%s/pircam.js' % config['data_dir']
 	open(scriptPath, 'w').write(photoswipe_script)
+	if config['verbose'] == 'True': logg('List of %d files written to %s' % (int(config['numLast']), scriptPath))
 
 def run_converter(CAMID):
 	"""Matches audio to video and combines using ffmpeg, also comnverting to ogg theora/vorbis. 
