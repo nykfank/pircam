@@ -2,7 +2,7 @@
 
 # pircam_test, 2019 by Niklaus Fankhauser
 
-import os, sys, time, urllib, subprocess, xmpp, sqlite3
+import os, sys, time, urllib2, subprocess, xmpp, sqlite3
 from tinkerforge.ip_connection import IPConnection
 from tinkerforge.bricklet_motion_detector import BrickletMotionDetector
 from tinkerforge.bricklet_motion_detector_v2 import BrickletMotionDetectorV2
@@ -171,7 +171,7 @@ for CAMID in cameras.keys():
 		os.mkdir(cam_dir)
 	# Testing video download
 	print 'Testing camera %s MJPEG download from %s' % (CAMID, cameras[CAMID]['mjpeg'])
-	try: stream = urllib.urlopen(cameras[CAMID]['mjpeg']).read(int(cameras[CAMID]['read']))
+	try: stream = urllib2.urlopen(cameras[CAMID]['mjpeg'], timeout=30).read(int(cameras[CAMID]['read']))
 	except:
 		print 'Failed to download MJPEG for camera %s from %s' % (CAMID, cameras[CAMID]['mjpeg'])
 		sys.exit()
