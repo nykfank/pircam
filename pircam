@@ -211,9 +211,15 @@ def cb_motion_detected(CAMID):
 def is_idle():
 	"""Returns True if no download or convert threads are running."""
 	for CAMID in cameras.keys():
-		if current_video_thread.has_key(CAMID) and current_video_thread[CAMID].isAlive(): return False
-		if current_audio_thread.has_key(CAMID) and current_audio_thread[CAMID].isAlive(): return False
-	if current_convert_thread != None and current_convert_thread.isAlive(): return False
+		if current_video_thread.has_key(CAMID) and current_video_thread[CAMID].isAlive(): 
+			if config['verbose'] == 'True': logg('%s: video isAlive' % CAMID)
+			return False
+		if current_audio_thread.has_key(CAMID) and current_audio_thread[CAMID].isAlive(): 
+			if config['verbose'] == 'True': logg('%s: audio isAlive' % CAMID)
+			return False
+	if current_convert_thread != None and current_convert_thread.isAlive():
+		if config['verbose'] == 'True': logg('Converter isAlive')
+		return False
 	return True
  
 def configure_motion_detector(uid):
@@ -269,14 +275,18 @@ killer = GracefulKiller()
 while True: # Main loop
 	threading.Event().wait(int(config['sleep_sec'])) # Sleep, but wake for events.
 	# Start convert thread per camera, if there are videos queued and system is idle.
+	idle_status = is_idle()
 	for CAMID in cameras.keys():
 		if not video_queue.has_key(CAMID): continue 
 		if len(video_queue[CAMID]) == 0: continue
-		if is_idle() or len(video_queue[CAMID]) > int(config['max_queue']):
+		if idle_status or len(video_queue[CAMID]) > int(config['max_queue']):
+			if config['verbose'] == 'True': 
+				tp = CAMID, idle_status, len(video_queue[CAMID]), int(config['max_queue'])
+				logg('%s: Starting converter thread, idle=%s, queue=%d, max_queue=%d' % tp)
 			current_convert_thread = threading.Thread(target=run_converter, args=[CAMID])
 			current_convert_thread.start()
 			break
-	if is_idle() and killer.kill_now: break # Terminate
+	if idle_status and killer.kill_now: break # Terminate
 	# Check for bricklet reset and reconfigure if needed (status LED on).
 	if reconfigure_time + int(config['reconf_sec']) < time.time():
 		for uid in sensors.keys():
@@ -289,7 +299,7 @@ while True: # Main loop
 				configure_motion_detector(uid)
 		reconfigure_time = time.time()
 	# Check if all camera are online and send warning otherwise.
-	if is_idle() and check_time + int(config['check_sec']) < time.time():
+	if idle_status and check_time + int(config['check_sec']) < time.time():
 		check_camera_status()
 		check_time = time.time()
 
