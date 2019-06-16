@@ -3,7 +3,7 @@
 # pircam, 2019 by Niklaus Fankhauser
 # Motion detection sensor triggered capture and combination of MJPEG video and audio from D-Link network cameras.
 
-import os, sys, time, threading, urllib2, subprocess, xmpp, signal
+import os, sys, time, threading, urllib2, subprocess, xmpp, signal, base64
 from tinkerforge.ip_connection import IPConnection
 from tinkerforge.bricklet_motion_detector import BrickletMotionDetector
 from tinkerforge.bricklet_motion_detector_v2 import BrickletMotionDetectorV2
@@ -50,13 +50,23 @@ def logg(x):
 	"""Writes message and formated timestamp to logfile."""
 	x = '%s: %s' % (time.strftime('%Y-%m-%d %H:%M:%S'), x)
 	open(config['logfile'], 'a').write(x + '\n')
+
+def urllib2_request(inURL):
+	if '@' in inURL and '//' in inURL and ':' in inURL:
+		username, password = inURL.split('@')[0].split('//')[1].split(':')
+		url = inURL.replace('%s:%s@' % (username, password), '')
+		request = urllib2.Request(url)
+		base64string = base64.b64encode('%s:%s' % (username, password))
+		request.add_header("Authorization", "Basic %s" % base64string)
+		return request
+	else: return inURL
  
 def download_mjpeg(CAMID):
 	"""Download specified size from MJPEG stream by HTTP using urllib2 and append filename to video-queue."""
 	global video_queue
 	ofn = '%s/%s_mjpeg/%s.mjpeg' % (config['data_dir'], CAMID, time.strftime('%Y%m%d_%H%M%S'))
 	try:
-		stream = urllib2.urlopen(cameras[CAMID]['mjpeg'], timeout=30).read(int(cameras[CAMID]['read']))
+		stream = urllib2.urlopen(urllib2_request(cameras[CAMID]['mjpeg']), timeout=30).read(int(cameras[CAMID]['read']))
 	except:
 		logg('%s: Video download error!' % CAMID)
 		return
@@ -232,7 +242,7 @@ def configure_motion_detector(uid):
 	logg('Callback for %s at %s to %s registered' % (uid, sensors[uid]['ip'], sensors[uid]['cam']))
 
 def is_camera_online(CAMID):
-	try: stream = urllib2.urlopen(cameras[CAMID]['mjpeg'], timeout=30).read(200)
+	try: stream = urllib2.urlopen(urllib2_request(cameras[CAMID]['mjpeg']), timeout=30).read(200)
 	except: return False
 	if 'jpeg' in stream: return True
 	return False

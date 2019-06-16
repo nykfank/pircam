@@ -39,8 +39,7 @@ def extract_first_jpeg(mjpeg_data):
 	header = mjpeg_data.split('\r\n\r\n')[0]
 	if not 'Length: ' in header: return ''
 	content_length = header.split('Length: ')[1].split('\r\n')[0].strip()
-	try: content_length = int(content_length)
-	except: return ''
+	content_length = int(content_length)
 	data_start = len(header) + 4
 	if len(mjpeg_data) <= data_start + content_length: return ''
 	return mjpeg_data[data_start:(data_start + content_length)]
@@ -144,6 +143,18 @@ if len(sensors) == 0:
 
 if not os.path.isdir(test_dir): os.mkdir(test_dir)
 
+def urllib2_request(inURL):
+	if '@' in inURL and '//' in inURL and ':' in inURL:
+		username, password = inURL.split('@')[0].split('//')[1].split(':')
+		url = inURL.replace('%s:%s@' % (username, password), '')
+		print 'URL2:', url
+		request = urllib2.Request(url)
+		import base64
+		base64string = base64.b64encode('%s:%s' % (username, password))
+		request.add_header("Authorization", "Basic %s" % base64string)
+		return request
+	else: return inURL
+
 for CAMID in cameras.keys():
 	for i in required_cam:
 		if not cameras[CAMID].has_key(i): 
@@ -171,10 +182,8 @@ for CAMID in cameras.keys():
 		os.mkdir(cam_dir)
 	# Testing video download
 	print 'Testing camera %s MJPEG download from %s' % (CAMID, cameras[CAMID]['mjpeg'])
-	try: stream = urllib2.urlopen(cameras[CAMID]['mjpeg'], timeout=30).read(int(cameras[CAMID]['read']))
-	except:
-		print 'Failed to download MJPEG for camera %s from %s' % (CAMID, cameras[CAMID]['mjpeg'])
-		sys.exit()
+	print 'URL:', cameras[CAMID]['mjpeg']
+	stream = urllib2.urlopen(urllib2_request(cameras[CAMID]['mjpeg']), timeout=30).read(int(cameras[CAMID]['read']))
 	ofn = '%s/%s.mjpeg' % (test_dir, CAMID)
 	open(ofn, 'w').write(stream)
 	print 'Camera %s MJPEG download: OK' % CAMID
