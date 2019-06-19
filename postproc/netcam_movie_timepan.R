@@ -7,7 +7,7 @@ library(suncalc)
 ffmpeg <- "/usr/bin/ffmpeg -hide_banner -loglevel panic"
 indir <- sprintf("/mnt/big/nick/cams/%s", camID)
 writeLines(sprintf("Movie directory: %s", indir))
-outfile <- sprintf("sampled_%s.ogg", basename(indir))
+outfile <- sprintf("timespan_%s.ogg", basename(indir))
 tempTextFile <- sprintf("/tmp/vidfiles%d.txt", as.integer(Sys.time()))
 sampleSize <- 60
 seconds_per_video <- 3
