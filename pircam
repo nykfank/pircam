@@ -123,6 +123,7 @@ def index_element(fpath):
 	src = fpath.replace(config['data_dir'], '')
 	w, h = config['size_x'], config['size_y']
 	video = src.replace('jpg', 'ogg').strip('/')
+	if True in [k in fpath for k, v in cameras.items() if 'pipir' in v]: video = video.replace('ogg', 'mp4')
 	title = timeFormat(fpath)
 	pid = filebase(fpath)
 	return "{src:'%s', w:%s, h:%s, title:'%s', video:'%s', pid:'%s'}" % (src, w, h, title, video, pid)

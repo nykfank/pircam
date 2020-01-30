@@ -71,7 +71,7 @@ for (i in 1:length(framefiles)) {
 }
 
 audiofiles <- list.files(audiodir, full.names = TRUE)
-audiofiles_selected <- audiofiles[1:length(audiofiles) %% (floor(out_fps / in_fps) - 1) == 0]
+audiofiles_selected <- audiofiles[1:length(audiofiles) %% (floor(out_fps / in_fps)) == 0]
 mergefiles <- sprintf("file '%s'", audiofiles_selected)
 tempTextFile <- sprintf("/tmp/vidfiles%d.txt", as.integer(Sys.time()))
 write(mergefiles, file=tempTextFile)
