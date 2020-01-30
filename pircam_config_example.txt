@@ -20,6 +20,7 @@ numLast     = 150
 verbose     = False
 check_sec   = 3600
 warning_sec = 3600
+server_addr = 192.168.1.112
 
 CAMERA
 netcam
@@ -38,7 +39,7 @@ audio = rtsp://192.168.1.138/live2.sdp
 read  = 5000000
 fps   = 4
 raspberryPiCam
-pipir = True
+pipir = pi4:/home/pi/cam
 
 SENSOR
 Ek8	
