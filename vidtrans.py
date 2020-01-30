@@ -74,7 +74,7 @@ def generate_index_page():
 class PiSignalHandler(BaseRequestHandler):
   def handle(self):
 	hostname = self.client_address[0]
-	ip_data = self.request.recv(30)
+	ip_data = self.request.recv(50).strip()
 	if not ':' in ip_data: return
 	camid, fn_mp4 = ip_data.split(':')
 	if not cameras[camid].has_key('pipir'): return
@@ -85,7 +85,7 @@ class PiSignalHandler(BaseRequestHandler):
 	path_jpg = '%s/%s' % (local_path, fn_jpg)
 	cmd1 = 'rsync', '%s/%s' % (remote_path, fn_mp4), path_mp4
 	log_and_run(cmd1)
-	cmd2 = 'ffmpeg', '-i', path_mp4, '-vf', '"select=eq(n\,25)"', path_jpg
+	cmd2 = 'ffmpeg', '-i', path_mp4, '-vf', 'select=eq(n\,50)', path_jpg
 	log_and_run(cmd2)
 	cmd3 = 'mogrify', '-scale', '1280x720', path_jpg
 	log_and_run(cmd3)
@@ -98,5 +98,7 @@ class PiSignalHandler(BaseRequestHandler):
 # Load configuration into dictionaries
 cameras = load_config(config_file, 'CAMERA')
 config  = load_config(config_file, 'GLOBAL')
+# https://stackoverflow.com/questions/47903031/background-threaded-tcp-server-in-python
 server = TCPServer((config['server_addr'], 22333), PiSignalHandler)
+print 'Server running...'
 server.serve_forever()
