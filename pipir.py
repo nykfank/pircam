@@ -1,6 +1,6 @@
 import RPi.GPIO as GPIO
 import time, subprocess, socket, os
-server_address='192.168.1.139' # tell
+server_address='192.168.1.139'
 SENSOR_PIN = 23
 Relay_Ch1 = 26
 Relay_Ch2 = 20
@@ -28,7 +28,11 @@ def record_video(channel):
     event_lock = False
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(600)
-    s.connect((server_address, 22333))
+    try: s.connect((server_address, 22333))
+    except:
+        print 'FAILED TO CONNECT'
+        s.close()
+        return
     msg = 'ghaus:%s.mp4' % t
     s.send(msg)
     s.close()
