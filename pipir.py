@@ -1,5 +1,6 @@
+#!/usr/bin/python
 import RPi.GPIO as GPIO
-import time, subprocess, socket, os
+import time, subprocess, socket, os, signal
 server_address='192.168.1.139'
 SENSOR_PIN = 23
 Relay_Ch1 = 26
@@ -10,7 +11,6 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(SENSOR_PIN, GPIO.IN)
 GPIO.setup(Relay_Ch2, GPIO.OUT)
 event_lock = False
-
 log_fn = '/var/log/pipir.log'
 
 def logg(x):
@@ -23,6 +23,14 @@ def log_and_run(cmd):
     if config['verbose'] == 'True': logg(' '.join(cmd))
     rcode = subprocess.call(cmd)
     if rcode > 0: logg('%s (%d)' % (' '.join(cmd), rcode))
+
+class GracefulKiller:
+    kill_now = False
+    def __init__(self):
+        signal.signal(signal.SIGINT, self.exit_gracefully)
+        signal.signal(signal.SIGTERM, self.exit_gracefully)
+    def exit_gracefully(self,signum, frame):
+        self.kill_now = True
 
 def record_video(channel):
     global event_lock
@@ -51,10 +59,10 @@ def record_video(channel):
     logg(msg)
     s.close()
 
-try:
-    GPIO.add_event_detect(SENSOR_PIN, GPIO.RISING, callback=record_video)
-    while True:
-        time.sleep(100)
-except KeyboardInterrupt:
-    print "Beende..."
+killer = GracefulKiller()
+GPIO.add_event_detect(SENSOR_PIN, GPIO.RISING, callback=record_video)
+logg('PiPIR started')
+while True:
+    if event_lock == False and killer.kill_now: break # Terminate
+    time.sleep(1)
 GPIO.cleanup()
