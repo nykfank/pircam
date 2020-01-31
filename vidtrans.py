@@ -73,18 +73,18 @@ def generate_index_page():
 
 class PiSignalHandler(BaseRequestHandler):
   def handle(self):
-	hostname = self.client_address[0]
 	ip_data = self.request.recv(50).strip()
-	if not ':' in ip_data: return
+	logg('%s from %s' % (ip_data, self.client_address[0]))
+	if not ':' in ip_data: logg('Bad data'); return
 	camid, fn_mp4 = ip_data.split(':')
-	if not cameras.has_key(camid): return
-	if not cameras[camid].has_key('pipir'): return
-	fn_jpg = fn_mp4.replace('mp4', 'jpg')
+	if not cameras.has_key(camid): logg('Bad camera'); return
+	if not cameras[camid].has_key('pipir'): logg('Missing pipir path'); return
+	if not cameras[camid].has_key('addr'): logg('Missing pipir addr'); return
+	if cameras[camid]['addr'] != self.client_address[0]: logg('Bad client addr'); return
 	local_path = '%s/%s' % (config['data_dir'], camid)
-	pipir_path = cameras[camid]['pipir']
 	path_mp4 = '%s/%s' % (local_path, fn_mp4)
-	path_jpg = '%s/%s' % (local_path, fn_jpg)
-	cmd1 = '/usr/bin/rsync', '%s/%s' % (pipir_path, fn_mp4), path_mp4
+	path_jpg = '%s/%s' % (local_path, fn_mp4.replace('mp4', 'jpg'))
+	cmd1 = '/usr/bin/rsync', '%s/%s' % (cameras[camid]['pipir'], fn_mp4), path_mp4
 	cmd2 = '/usr/bin/ffmpeg', '-hide_banner', '-loglevel', 'panic', '-i', path_mp4, '-vf', 'select=eq(n\,50)', path_jpg
 	cmd3 = '/usr/bin/mogrify', '-scale', '1280x720', path_jpg
 	for cmd in [cmd1, cmd2, cmd3]: log_and_run(cmd)
@@ -93,7 +93,7 @@ class PiSignalHandler(BaseRequestHandler):
 	upload_to_webserver(path_mp4, webserver_path)
 	generate_index_page()
 	upload_to_webserver('%s/pircam.js' % config['data_dir'], config['webRoot'])
-	upload_to_webserver(config['logfile'], config['webRoot'])
+	upload_to_webserver(log_fn, config['webRoot'])
 
 # Load configuration into dictionaries
 cameras = load_config(config_file, 'CAMERA')
