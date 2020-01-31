@@ -77,7 +77,7 @@ class PiSignalHandler(BaseRequestHandler):
 	ip_data = self.request.recv(50).strip()
 	if not ':' in ip_data: return
 	camid, fn_mp4 = ip_data.split(':')
-	if not cameras.has_key('camid'): return
+	if not cameras.has_key(camid): return
 	if not cameras[camid].has_key('pipir'): return
 	local_path = '%s/%s' % (config['data_dir'], camid)
 	remote_path = cameras[camid]['pipir']
