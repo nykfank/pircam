@@ -18,6 +18,12 @@ def logg(x):
     x = '%s: %s' % (time.strftime('%Y-%m-%d %H:%M:%S'), x)
     open(log_fn, 'a').write(x + '\n')
 
+def log_and_run(cmd):
+    """Run command using subprocess.call and only log in case of error."""
+    if config['verbose'] == 'True': logg(' '.join(cmd))
+    rcode = subprocess.call(cmd)
+    if rcode > 0: logg('%s (%d)' % (' '.join(cmd), rcode))
+
 def record_video(channel):
     global event_lock
     if event_lock == True: return
@@ -26,22 +32,23 @@ def record_video(channel):
     fn1 = '/home/pi/cam/%s.h264' % t
     fn2 = '/home/pi/cam/%s.mp4' % t
     cmd1 = '/usr/bin/raspivid', '-t', '8000', '--mode', '4', '--exposure', 'auto', '--awb', 'auto', '-o', fn1
-    cmd2 = '/usr/bin/MP4Box', '-add', fn1, fn2
-    GPIO.output(Relay_Ch2, GPIO.LOW) 
-    subprocess.call(cmd1)
+    cmd2 = '/usr/bin/MP4Box', '-quiet', '-add', fn1, fn2
+    GPIO.output(Relay_Ch2, GPIO.LOW)
+    log_and_run(cmd1)
     GPIO.output(Relay_Ch2, GPIO.HIGH)
-    subprocess.call(cmd2)
+    log_and_run(cmd2)
     os.unlink(fn1)
     event_lock = False
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(600)
     try: s.connect((server_address, 22333))
     except:
-        print 'FAILED TO CONNECT'
+        logg('FAILED TO CONNECT')
         s.close()
         return
     msg = 'ghaus:%s.mp4' % t
     s.send(msg)
+    logg(msg)
     s.close()
 
 try:
