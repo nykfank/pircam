@@ -79,17 +79,15 @@ class PiSignalHandler(BaseRequestHandler):
 	camid, fn_mp4 = ip_data.split(':')
 	if not cameras.has_key(camid): return
 	if not cameras[camid].has_key('pipir'): return
+	fn_jpg = fn_mp4.replace('mp4', 'jpg')
 	local_path = '%s/%s' % (config['data_dir'], camid)
 	remote_path = cameras[camid]['pipir']
-	fn_jpg = fn_mp4.replace('mp4', 'jpg')
 	path_mp4 = '%s/%s' % (local_path, fn_mp4)
 	path_jpg = '%s/%s' % (local_path, fn_jpg)
-	cmd1 = 'rsync', '%s/%s' % (remote_path, fn_mp4), path_mp4
-	log_and_run(cmd1)
-	cmd2 = 'ffmpeg', '-i', path_mp4, '-vf', 'select=eq(n\,50)', path_jpg
-	log_and_run(cmd2)
-	cmd3 = 'mogrify', '-scale', '1280x720', path_jpg
-	log_and_run(cmd3)
+	cmd1 = '/usr/bin/rsync', '%s/%s' % (remote_path, fn_mp4), path_mp4
+	cmd2 = '/usr/bin/ffmpeg', '-hide_banner', '-loglevel', 'panic', '-i', path_mp4, '-vf', 'select=eq(n\,50)', path_jpg
+	cmd3 = '/usr/bin/mogrify', '-scale', '1280x720', path_jpg
+	for cmd in [cmd1, cmd2, cmd3]: log_and_run(cmd)
 	upload_to_webserver(path_jpg, '%s/%s' % (config['data_dir'], camid))
 	upload_to_webserver(path_mp4, '%s/%s' % (config['data_dir'], camid))
 	generate_index_page()
