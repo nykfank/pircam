@@ -18,8 +18,8 @@ def record_video(channel):
     t = time.strftime('%Y%m%d_%H%M%S')
     fn1 = '/home/pi/cam/%s.h264' % t
     fn2 = '/home/pi/cam/%s.mp4' % t
-    cmd1 = 'raspivid', '-t', '8000', '--mode', '4', '--exposure', 'auto', '--awb', 'auto', '-o', fn1
-    cmd2 = 'MP4Box', '-add', fn1, fn2
+    cmd1 = '/usr/bin/raspivid', '-t', '8000', '--mode', '4', '--exposure', 'auto', '--awb', 'auto', '-o', fn1
+    cmd2 = '/usr/bin/MP4Box', '-add', fn1, fn2
     GPIO.output(Relay_Ch2, GPIO.LOW) 
     subprocess.call(cmd1)
     GPIO.output(Relay_Ch2, GPIO.HIGH)

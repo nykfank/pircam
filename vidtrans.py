@@ -77,6 +77,7 @@ class PiSignalHandler(BaseRequestHandler):
 	ip_data = self.request.recv(50).strip()
 	if not ':' in ip_data: return
 	camid, fn_mp4 = ip_data.split(':')
+	if not cameras.has_key('camid'): return
 	if not cameras[camid].has_key('pipir'): return
 	local_path = '%s/%s' % (config['data_dir'], camid)
 	remote_path = cameras[camid]['pipir']
@@ -89,8 +90,8 @@ class PiSignalHandler(BaseRequestHandler):
 	log_and_run(cmd2)
 	cmd3 = 'mogrify', '-scale', '1280x720', path_jpg
 	log_and_run(cmd3)
-	upload_to_webserver(path_jpg, '%s/ghaus' % config['data_dir'])
-	upload_to_webserver(path_mp4, '%s/ghaus' % config['data_dir'])
+	upload_to_webserver(path_jpg, '%s/%s' % (config['data_dir'], camid))
+	upload_to_webserver(path_mp4, '%s/%s' % (config['data_dir'], camid))
 	generate_index_page()
 	upload_to_webserver('%s/pircam.js' % config['data_dir'], config['webRoot'])
 	upload_to_webserver(config['logfile'], config['webRoot'])
