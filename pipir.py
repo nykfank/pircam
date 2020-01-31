@@ -11,6 +11,13 @@ GPIO.setup(SENSOR_PIN, GPIO.IN)
 GPIO.setup(Relay_Ch2, GPIO.OUT)
 event_lock = False
 
+log_fn = '/var/log/pipir.log'
+
+def logg(x):
+    """Writes message and formated timestamp to logfile."""
+    x = '%s: %s' % (time.strftime('%Y-%m-%d %H:%M:%S'), x)
+    open(log_fn, 'a').write(x + '\n')
+
 def record_video(channel):
     global event_lock
     if event_lock == True: return

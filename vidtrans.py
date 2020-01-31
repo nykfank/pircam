@@ -81,15 +81,16 @@ class PiSignalHandler(BaseRequestHandler):
 	if not cameras[camid].has_key('pipir'): return
 	fn_jpg = fn_mp4.replace('mp4', 'jpg')
 	local_path = '%s/%s' % (config['data_dir'], camid)
-	remote_path = cameras[camid]['pipir']
+	pipir_path = cameras[camid]['pipir']
 	path_mp4 = '%s/%s' % (local_path, fn_mp4)
 	path_jpg = '%s/%s' % (local_path, fn_jpg)
-	cmd1 = '/usr/bin/rsync', '%s/%s' % (remote_path, fn_mp4), path_mp4
+	cmd1 = '/usr/bin/rsync', '%s/%s' % (pipir_path, fn_mp4), path_mp4
 	cmd2 = '/usr/bin/ffmpeg', '-hide_banner', '-loglevel', 'panic', '-i', path_mp4, '-vf', 'select=eq(n\,50)', path_jpg
 	cmd3 = '/usr/bin/mogrify', '-scale', '1280x720', path_jpg
 	for cmd in [cmd1, cmd2, cmd3]: log_and_run(cmd)
-	upload_to_webserver(path_jpg, '%s/%s' % (config['data_dir'], camid))
-	upload_to_webserver(path_mp4, '%s/%s' % (config['data_dir'], camid))
+	webserver_path = '%s/%s' % (config['data_dir'], camid)
+	upload_to_webserver(path_jpg, webserver_path)
+	upload_to_webserver(path_mp4, webserver_path)
 	generate_index_page()
 	upload_to_webserver('%s/pircam.js' % config['data_dir'], config['webRoot'])
 	upload_to_webserver(config['logfile'], config['webRoot'])
