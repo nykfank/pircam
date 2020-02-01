@@ -2,7 +2,7 @@
 import RPi.GPIO as GPIO
 import time, subprocess, socket, os, signal
 server_address = '192.168.1.139'
-verbose = True
+verbose = False
 SENSOR_PIN = 23
 Relay_Ch1 = 26
 Relay_Ch2 = 20
@@ -65,5 +65,5 @@ GPIO.add_event_detect(SENSOR_PIN, GPIO.RISING, callback=record_video)
 logg('PiPIR started')
 while True:
     if event_lock == False and killer.kill_now: break # Terminate
-    time.sleep(1)
+    time.sleep(5)
 GPIO.cleanup()
