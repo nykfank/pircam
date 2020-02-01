@@ -1,7 +1,8 @@
 #!/usr/bin/python
 import RPi.GPIO as GPIO
 import time, subprocess, socket, os, signal
-server_address='192.168.1.139'
+server_address = '192.168.1.139'
+verbose = True
 SENSOR_PIN = 23
 Relay_Ch1 = 26
 Relay_Ch2 = 20
@@ -20,7 +21,7 @@ def logg(x):
 
 def log_and_run(cmd):
     """Run command using subprocess.call and only log in case of error."""
-    if config['verbose'] == 'True': logg(' '.join(cmd))
+    if verbose == True: logg(' '.join(cmd))
     rcode = subprocess.call(cmd)
     if rcode > 0: logg('%s (%d)' % (' '.join(cmd), rcode))
 

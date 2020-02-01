@@ -1,7 +1,5 @@
 #!/usr/bin/python
-from SocketServer import TCPServer
-from SocketServer import BaseRequestHandler
-import subprocess, os, time
+import subprocess, os, time, SocketServer, threading
 log_fn = '/var/log/vidtrans.log'
 config_file = '/opt/pircam_config.txt'
 
@@ -71,7 +69,7 @@ def generate_index_page():
 	open(scriptPath, 'w').write(photoswipe_script)
 	if config['verbose'] == 'True': logg('List of %d files written to %s' % (int(config['numLast']), scriptPath))
 
-class PiSignalHandler(BaseRequestHandler):
+class PiSignalHandler(SocketServer.BaseRequestHandler):
   def handle(self):
 	ip_data = self.request.recv(50).strip()
 	logg('%s from %s' % (ip_data, self.client_address[0]))
@@ -95,10 +93,17 @@ class PiSignalHandler(BaseRequestHandler):
 	upload_to_webserver('%s/pircam.js' % config['data_dir'], config['webRoot'])
 	upload_to_webserver(log_fn, config['webRoot'])
 
+class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
+    pass
+
 # Load configuration into dictionaries
 cameras = load_config(config_file, 'CAMERA')
 config  = load_config(config_file, 'GLOBAL')
-# https://stackoverflow.com/questions/47903031/background-threaded-tcp-server-in-python
-server = TCPServer((config['server_addr'], 22333), PiSignalHandler)
+server = ThreadedTCPServer((config['server_addr'], 22333), PiSignalHandler)
+server_thread = threading.Thread(target=server.serve_forever)
+server_thread.daemon = True
+server_thread.start()
 print 'Server running...'
-server.serve_forever()
+while True:	time.sleep(1)
+server.shutdown()
+server.server_close()

@@ -3,7 +3,7 @@
 # pircam, 2019 by Niklaus Fankhauser
 # Motion detection sensor triggered capture and combination of MJPEG video and audio from D-Link network cameras.
 
-import os, sys, time, threading, urllib2, subprocess, xmpp, signal, base64
+import os, sys, time, threading, urllib2, subprocess, xmpp, signal, base64, SocketServer
 from tinkerforge.ip_connection import IPConnection
 from tinkerforge.bricklet_motion_detector import BrickletMotionDetector
 from tinkerforge.bricklet_motion_detector_v2 import BrickletMotionDetectorV2
@@ -251,6 +251,7 @@ def is_camera_online(CAMID):
 def check_camera_status():
 	global cam_offline_time
 	for CAMID in cameras.keys():
+		if not cameras[CAMID].has_key('mjpeg'): continue
 		now = time.time()
 		offline_sec = now - cam_offline_time.get(CAMID, now)
 		jtext = '%s offline for %2.1f hours!' % (CAMID, offline_sec / 3600)
@@ -261,6 +262,33 @@ def check_camera_status():
 				logg(jtext)
 			if not cam_offline_time.has_key(CAMID): 
 				cam_offline_time[CAMID] = time.time()
+
+class PiSignalHandler(SocketServer.BaseRequestHandler):
+  def handle(self):
+	ip_data = self.request.recv(50).strip()
+	logg('%s from %s' % (ip_data, self.client_address[0]))
+	if not ':' in ip_data: logg('Bad data'); return
+	camid, fn_mp4 = ip_data.split(':')
+	if not cameras.has_key(camid): logg('Bad camera'); return
+	if not cameras[camid].has_key('pipir'): logg('Missing pipir path'); return
+	if not cameras[camid].has_key('addr'): logg('Missing pipir addr'); return
+	if cameras[camid]['addr'] != self.client_address[0]: logg('Bad client addr'); return
+	local_path = '%s/%s' % (config['data_dir'], camid)
+	path_mp4 = '%s/%s' % (local_path, fn_mp4)
+	path_jpg = '%s/%s' % (local_path, fn_mp4.replace('mp4', 'jpg'))
+	cmd1 = '/usr/bin/rsync', '%s/%s' % (cameras[camid]['pipir'], fn_mp4), path_mp4
+	cmd2 = '/usr/bin/ffmpeg', '-hide_banner', '-loglevel', 'panic', '-i', path_mp4, '-vf', 'select=eq(n\,50)', path_jpg
+	cmd3 = '/usr/bin/mogrify', '-scale', '1280x720', path_jpg
+	for cmd in [cmd1, cmd2, cmd3]: log_and_run(cmd)
+	webserver_path = '%s/%s' % (config['data_dir'], camid)
+	upload_to_webserver(path_jpg, webserver_path)
+	upload_to_webserver(path_mp4, webserver_path)
+	generate_index_page()
+	upload_to_webserver('%s/pircam.js' % config['data_dir'], config['webRoot'])
+	upload_to_webserver(config['logfile'], config['webRoot'])
+
+class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
+    pass
 
 # Load configuration into dictionaries
 sensors = load_config(config_file, 'SENSOR')
@@ -283,6 +311,11 @@ logg('IP connections: %d' % len(ipcon))
 reconfigure_time = time.time()
 check_time = time.time()
 killer = GracefulKiller()
+tcp_server = ThreadedTCPServer((config['server_addr'], 22333), PiSignalHandler)
+server_thread = threading.Thread(target=tcp_server.serve_forever)
+server_thread.start()
+logg('TCP server running')
+
 while True: # Main loop
 	threading.Event().wait(int(config['sleep_sec'])) # Sleep, but wake for events.
 	# Start convert thread per camera, if there are videos queued and system is idle.
@@ -315,4 +348,6 @@ while True: # Main loop
 		check_time = time.time()
 
 for ip in ipcon.keys(): ipcon[ip].disconnect()
+tcp_server.shutdown()
+tcp_server.server_close()
 logg('Finished')

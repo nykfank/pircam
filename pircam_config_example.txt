@@ -40,6 +40,7 @@ read  = 5000000
 fps   = 4
 raspberryPiCam
 pipir = pi4:/home/pi/cam
+server_addr = 192.168.1.113
 
 SENSOR
 Ek8	
