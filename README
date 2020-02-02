@@ -7,6 +7,9 @@ This python program runs as a daemon to performs motion detections sensor trigge
 It is tested with ejabberd running on the same machine. 
 It combines and converts MJPEG video and AAC audio to the ogg vorbis/theora format using ffmpeg and uploads it to a separate webserver by rsync.
 
+Additionally, it acts as a TCP server which processes messages from Raspberry Pi units taking videos running 
+the pipir.py program and then downloads the videos to integrate them with those from the other camera.
+
 The length of the video is specified by the rec_sec variable. For audio the desired length can be specified by RTSP. 
 But the MJPEG stream has to be downloaded by size, so an initial guess is made.
 After the number of downloaded frames are counted, the MJPEG download size is corrected to result in the length specified by rec_sec.
