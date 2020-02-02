@@ -1,16 +1,13 @@
 #!/usr/bin/python
 import RPi.GPIO as GPIO
 import time, subprocess, socket, os, signal
-server_address = '192.168.1.139'
+camid = 'ghaus' # Local identifier
+pircam_address = '192.168.1.139' # Server to fetch videos
 verbose = False
-SENSOR_PIN = 23
+SENSOR_PIN = 23 # PIR sensor
 Relay_Ch1 = 26
-Relay_Ch2 = 20
+Relay_Ch2 = 20 # IR LED
 Relay_Ch3 = 21
-GPIO.setwarnings(False)
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(SENSOR_PIN, GPIO.IN)
-GPIO.setup(Relay_Ch2, GPIO.OUT)
 event_lock = False
 log_fn = '/var/log/pipir.log'
 
@@ -50,19 +47,25 @@ def record_video(channel):
     event_lock = False
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(600)
-    try: s.connect((server_address, 22333))
+    try: s.connect((pircam_address, 22333))
     except:
         logg('FAILED TO CONNECT')
         s.close()
         return
-    msg = 'ghaus:%s.mp4' % t
+    msg = '%s:%s.mp4' % (camid, t)
     s.send(msg)
     logg(msg)
     s.close()
 
 killer = GracefulKiller()
+# GPIO setup
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(SENSOR_PIN, GPIO.IN)
+GPIO.setup(Relay_Ch2, GPIO.OUT)
 GPIO.add_event_detect(SENSOR_PIN, GPIO.RISING, callback=record_video)
 logg('PiPIR started')
+# Event loop
 while True:
     if event_lock == False and killer.kill_now: break # Terminate
     time.sleep(5)
