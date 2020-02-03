@@ -286,6 +286,10 @@ class PiSignalHandler(SocketServer.BaseRequestHandler):
 	generate_index_page()
 	upload_to_webserver('%s/pircam.js' % config['data_dir'], config['webRoot'])
 	upload_to_webserver(config['logfile'], config['webRoot'])
+	if not ':' in cameras[camid]['pipir']: return
+	client_id, client_path = cameras[camid]['pipir'].split(':')
+	cmd4 = '/usr/bin/ssh', client_id, 'mv', '%s/%s' % (client_path, fn_mp4), '%s_ok/%s' % (client_path, fn_mp4)
+	log_and_run(cmd4)
 
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     pass

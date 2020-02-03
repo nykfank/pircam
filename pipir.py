@@ -1,7 +1,10 @@
 #!/usr/bin/python
 import RPi.GPIO as GPIO
 import time, subprocess, socket, os, signal
+
 camid = 'ghaus' # Local identifier
+local_dir1 = '/home/pi/cam' # Recorded videos
+local_dir2 = '/home/pi/cam_ok' # Transfered videos
 pircam_address = '192.168.1.139' # Server to fetch videos
 verbose = False
 SENSOR_PIN = 23 # PIR sensor
@@ -35,8 +38,8 @@ def record_video(channel):
     if event_lock == True: return
     event_lock = True
     t = time.strftime('%Y%m%d_%H%M%S')
-    fn1 = '/home/pi/cam/%s.h264' % t
-    fn2 = '/home/pi/cam/%s.mp4' % t
+    fn1 = '%s/%s.h264' % (local_dir1, t)
+    fn2 = '%s/%s.mp4' % (local_dir1, t)
     cmd1 = '/usr/bin/raspivid', '-t', '8000', '--mode', '4', '--exposure', 'auto', '--awb', 'auto', '-o', fn1
     cmd2 = '/usr/bin/MP4Box', '-quiet', '-add', fn1, fn2
     GPIO.output(Relay_Ch2, GPIO.LOW)
@@ -58,6 +61,9 @@ def record_video(channel):
     s.close()
 
 killer = GracefulKiller()
+# Check output directories
+if not os.path.isdir(local_dir1): os.mkdir(local_dir1)
+if not os.path.isdir(local_dir2): os.mkdir(local_dir2)
 # GPIO setup
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
