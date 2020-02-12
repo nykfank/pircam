@@ -268,6 +268,9 @@ class PiSignalHandler(SocketServer.BaseRequestHandler):
 	ip_data = self.request.recv(50).strip()
 	logg('%s from %s' % (ip_data, self.client_address[0]))
 	if not ':' in ip_data: logg('Bad data'); return
+	if 'CAMID' in ip_data:
+		msg_id, CAMID = ip_data.split(':')
+		return cb_motion_detected(CAMID)
 	camid, fn_mp4 = ip_data.split(':')
 	if not cameras.has_key(camid): logg('Bad camera'); return
 	if not cameras[camid].has_key('pipir'): logg('Missing pipir path'); return

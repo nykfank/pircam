@@ -1,8 +1,10 @@
 #!/usr/bin/python
 import RPi.GPIO as GPIO
 import time, subprocess, socket, os, signal
-
+enable_local = False
+enable_signal = True
 camid = 'ghaus' # Local identifier
+camid_signal = 'gartenhaus' # Signal camera identifier
 local_dir1 = '/home/pi/cam' # Recorded videos
 local_dir2 = '/home/pi/cam_ok' # Transfered videos
 pircam_address = '192.168.1.139' # Server to fetch videos
@@ -60,6 +62,24 @@ def record_video(channel):
     logg(msg)
     s.close()
 
+def send_signal(channel):
+    global event_lock
+    if event_lock == True: return
+    event_lock = True
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(600)
+    try: s.connect((pircam_address, 22333))
+    except:
+        logg('FAILED TO CONNECT')
+        s.close()
+        event_lock = False
+        return
+    msg = 'CAMID:%s' % camid_signal
+    s.send(msg)
+    logg(msg)
+    s.close()
+    event_lock = False
+
 killer = GracefulKiller()
 # Check output directories
 if not os.path.isdir(local_dir1): os.mkdir(local_dir1)
@@ -69,7 +89,8 @@ GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(SENSOR_PIN, GPIO.IN)
 GPIO.setup(Relay_Ch2, GPIO.OUT)
-GPIO.add_event_detect(SENSOR_PIN, GPIO.RISING, callback=record_video)
+if enable_local: GPIO.add_event_detect(SENSOR_PIN, GPIO.RISING, callback=record_video)
+if enable_signal: GPIO.add_event_detect(SENSOR_PIN, GPIO.RISING, callback=send_signal)
 logg('PiPIR started')
 # Event loop
 while True:
