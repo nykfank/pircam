@@ -1,0 +1,17 @@
+# Copy to /etc/systemd/system/pitinker.service
+# systemctl daemon-reload
+# systemctl enable pitinker.service
+# systemctl start pitinker.service
+
+[Unit]
+Description=pitinker
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/usr/bin/pitinker.py
+User=pi
+
+[Install]
+WantedBy=multi-user.target
