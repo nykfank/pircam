@@ -51,6 +51,8 @@ def record_video():
     log_and_run(cmd2)
     os.unlink(fn1)
     event_lock = False
+    # ffmpeg -i dark.mp4 -vf blackdetect=d=0.1:pix_th=0.1 -f rawvideo -y /dev/null
+    # [blackdetect @ 0x557e6501dd00] black_start:0 black_end:1.5 black_duration:1.5
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(600)
     try: s.connect((pircam_address, 22333))
