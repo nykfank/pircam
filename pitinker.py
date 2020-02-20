@@ -10,7 +10,7 @@ local_dir2 = '/home/pi/cam_ok' # Transfered videos
 pircam_address = '192.168.1.139' # Server to fetch videos
 tinkerforge_address = '192.168.1.218' # Server to fetch videos
 tinkerforge_uid = 'MLF'
-verbose = False
+verbose = True
 Relay_Ch1 = 26
 Relay_Ch2 = 20 # IR LED
 Relay_Ch3 = 21
@@ -44,7 +44,7 @@ def record_video():
     fn1 = '%s/%s.h264' % (local_dir1, t)
     fn2 = '%s/%s.mp4' % (local_dir1, t)
     cmd1 = '/usr/bin/raspivid', '-t', '5000', '--mode', '4', '--framerate', '2', '-o', fn1
-    cmd2 = '/usr/bin/MP4Box', '-quiet', '-add', fn1, fn2
+    cmd2 = '/usr/bin/MP4Box', '-quiet', '-fps', '2', '-add', fn1, fn2
     #GPIO.output(Relay_Ch2, GPIO.LOW)
     log_and_run(cmd1)
     #GPIO.output(Relay_Ch2, GPIO.HIGH)
