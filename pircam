@@ -280,7 +280,7 @@ class PiSignalHandler(SocketServer.BaseRequestHandler):
 	path_mp4 = '%s/%s' % (local_path, fn_mp4)
 	path_jpg = '%s/%s' % (local_path, fn_mp4.replace('mp4', 'jpg').replace('ogg', 'jpg'))
 	cmd1 = '/usr/bin/rsync', '%s/%s' % (cameras[camid]['pipir'], fn_mp4), path_mp4
-	cmd2 = '/usr/bin/ffmpeg', '-hide_banner', '-loglevel', 'panic', '-i', path_mp4, '-vf', 'select=eq(n\,2)', path_jpg
+	cmd2 = '/usr/bin/ffmpeg', '-hide_banner', '-loglevel', 'panic', '-i', path_mp4, '-vf', 'select=eq(n\,5)', path_jpg
 	cmd3 = '/usr/bin/mogrify', '-scale', '1280x720', path_jpg
 	for cmd in [cmd1, cmd2, cmd3]: log_and_run(cmd)
 	webserver_path = '%s/%s' % (config['data_dir'], camid)

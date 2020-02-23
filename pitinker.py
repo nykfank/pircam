@@ -10,7 +10,7 @@ local_dir2 = '/home/pi/cam_ok' # Transfered videos
 pircam_address = '192.168.1.139' # Server to fetch videos
 tinkerforge_address = '192.168.1.218' # Server to fetch videos
 tinkerforge_uid = 'MLF'
-verbose = True
+verbose = False
 Relay_Ch1 = 26
 Relay_Ch2 = 20 # IR LED
 Relay_Ch3 = 21
@@ -43,6 +43,7 @@ def record_video():
     t = time.strftime('%Y%m%d_%H%M%S')
     #GPIO.output(Relay_Ch2, GPIO.LOW)
     camera = picamera.PiCamera(sensor_mode=4)
+    time.sleep(0.1)
     for i in range(25):
         fn = '%s/%s_%02d.jpg' % (local_dir1, t, i)
         camera.capture(fn)
@@ -61,6 +62,7 @@ def record_video():
     bd_out = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
     if 'blackdetect' in bd_out:
         logg('blackdetect')
+        os.unlink(ofn)
         return
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(600)
