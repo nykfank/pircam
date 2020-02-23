@@ -3,7 +3,7 @@
 from tinkerforge.ip_connection import IPConnection
 from tinkerforge.bricklet_motion_detector import BrickletMotionDetector
 from tinkerforge.bricklet_motion_detector_v2 import BrickletMotionDetectorV2
-import time, subprocess, socket, os, signal
+import time, subprocess, socket, os, signal, picamera
 camid = 'ghaus' # Local identifier
 local_dir1 = '/home/pi/cam' # Recorded videos
 local_dir2 = '/home/pi/cam_ok' # Transfered videos
@@ -41,18 +41,27 @@ def record_video():
     if event_lock == True: return
     event_lock = True
     t = time.strftime('%Y%m%d_%H%M%S')
-    fn1 = '%s/%s.h264' % (local_dir1, t)
-    fn2 = '%s/%s.mp4' % (local_dir1, t)
-    cmd1 = '/usr/bin/raspivid', '-t', '5000', '--mode', '4', '--framerate', '2', '-o', fn1
-    cmd2 = '/usr/bin/MP4Box', '-quiet', '-fps', '2', '-add', fn1, fn2
     #GPIO.output(Relay_Ch2, GPIO.LOW)
-    log_and_run(cmd1)
-    #GPIO.output(Relay_Ch2, GPIO.HIGH)
-    log_and_run(cmd2)
-    os.unlink(fn1)
+    camera = picamera.PiCamera(sensor_mode=4)
+    for i in range(25):
+        fn = '%s/%s_%02d.jpg' % (local_dir1, t, i)
+        camera.capture(fn)
+        time.sleep(0.2)
+    camera.close()
     event_lock = False
-    # ffmpeg -i dark.mp4 -vf blackdetect=d=0.1:pix_th=0.1 -f rawvideo -y /dev/null
-    # [blackdetect @ 0x557e6501dd00] black_start:0 black_end:1.5 black_duration:1.5
+    #GPIO.output(Relay_Ch2, GPIO.HIGH)
+    pfn = '%s/%s_%%02d.jpg' % (local_dir1, t)
+    ofn = '%s/%s.ogg' % (local_dir1, t)
+    cmd = '/usr/bin/ffmpeg', '-hide_banner', '-loglevel', 'panic', '-framerate', '5', '-i', pfn, '-codec:v', 'libtheora', '-qscale:v', '7', ofn
+    log_and_run(cmd)
+    for i in range(25):
+        fn = '%s/%s_%02d.jpg' % (local_dir1, t, i)
+        if os.path.isfile(fn): os.unlink(fn)
+    cmd = '/usr/bin/ffmpeg', '-hide_banner', '-i', ofn, '-vf', 'blackdetect=d=0.1:pix_th=0.1', '-f', 'rawvideo', '-y', '/dev/null'
+    bd_out = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+    if 'blackdetect' in bd_out:
+        logg('blackdetect')
+        return
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(600)
     try: s.connect((pircam_address, 22333))
@@ -60,11 +69,10 @@ def record_video():
         logg('FAILED TO CONNECT')
         s.close()
         return
-    msg = '%s:%s.mp4' % (camid, t)
+    msg = '%s:%s.ogg' % (camid, t)
     s.send(msg)
     logg(msg)
     s.close()
-
 
 #GPIO.setwarnings(False)
 #GPIO.setmode(GPIO.BCM)
@@ -72,6 +80,7 @@ def record_video():
 #GPIO.setup(Relay_Ch2, GPIO.OUT)
 
 killer = GracefulKiller()
+
 # Check output directories
 if not os.path.isdir(local_dir1): os.mkdir(local_dir1)
 if not os.path.isdir(local_dir2): os.mkdir(local_dir2)
