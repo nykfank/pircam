@@ -150,6 +150,7 @@ def run_converter(CAMID):
 	unixtime = lambda x : time.mktime(time.strptime(x, "%Y%m%d_%H%M%S"))
 	audio_base = [ filebase(i) for i in local_audio_queue ]
 	fps = int(cameras[CAMID]['fps'])
+	video_sec = 0
 	for vfn in local_video_queue:
 		if not os.path.isfile(vfn):
 			logg('%s: Missing video!' % CAMID)
@@ -183,7 +184,7 @@ def run_converter(CAMID):
 		logg('%s: Video of %2.2f MB created at %s' % (CAMID, os.stat(ofn).st_size/1024.0/1024.0, ofn))
 		upload_to_webserver(ofn, '%s/%s' % (config['data_dir'], CAMID))
 		upload_to_webserver(jfn, '%s/%s' % (config['data_dir'], CAMID))
-	cameras[CAMID]['read'] = int(int(cameras[CAMID]['read']) * int(config['rec_sec']) / video_sec)
+	if video_sec > 0: cameras[CAMID]['read'] = int(int(cameras[CAMID]['read']) * int(config['rec_sec']) / video_sec)
 	if cameras[CAMID]['read'] > int(config['max_down']): cameras[CAMID]['read'] = int(config['max_down'])
 	if config['verbose'] == 'True': logg('%s: New MJPEG read length is %2.2f MB' % (CAMID, cameras[CAMID]['read']/1024.0/1024.0))
 	generate_index_page()
