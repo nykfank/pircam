@@ -309,7 +309,10 @@ for uid in sensors.keys():
 	ip = sensors[uid]['ip']
 	if not ipcon.has_key(ip):
 		ipcon[ip] = IPConnection() # Create IP connection
-		ipcon[ip].connect(ip, int(config['brick_port'])) # Connect to brickd
+		try: ipcon[ip].connect(ip, int(config['brick_port'])) # Connect to brickd
+		except:
+			logg('%s: Bricklet unreachable' % uid)
+			continue
 	# Create motion detector sensor device object using the IP connection
 	if sensors[uid]['vers'] == '1': sensorAPI[uid] = BrickletMotionDetector(uid, ipcon[ip]) 
 	if sensors[uid]['vers'] == '2': sensorAPI[uid] = BrickletMotionDetectorV2(uid, ipcon[ip])
