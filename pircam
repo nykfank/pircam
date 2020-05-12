@@ -239,7 +239,7 @@ def configure_motion_detector(uid):
 	global sensorAPI, cbFuns
 	try: sensorAPI[uid].set_status_led_config(0) # Turn off status LED (is on after bricklet reset)
 	except: 
-		logg("Failed to configure sensor %s", uid)
+		logg("Failed to configure sensor %s" % uid)
 		return
 	if sensors[uid]['vers'] == '2': sensorAPI[uid].set_sensitivity(sensors[uid]['sensi']) # Set sensitivity
 	cbFuns[uid] = lambda : cb_motion_detected(sensors[uid]['cam']) # Create callback function
