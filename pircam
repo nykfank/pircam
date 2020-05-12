@@ -237,7 +237,10 @@ def is_idle():
 def configure_motion_detector(uid):
 	"""Turn off LED, set sensitivity and register motion detection callback function."""
 	global sensorAPI, cbFuns
-	sensorAPI[uid].set_status_led_config(0) # Turn off status LED (is on after bricklet reset)
+	try: sensorAPI[uid].set_status_led_config(0) # Turn off status LED (is on after bricklet reset)
+	except: 
+		logg("Failed to configure sensor %s", uid)
+		return
 	if sensors[uid]['vers'] == '2': sensorAPI[uid].set_sensitivity(sensors[uid]['sensi']) # Set sensitivity
 	cbFuns[uid] = lambda : cb_motion_detected(sensors[uid]['cam']) # Create callback function
 	sensorAPI[uid].register_callback(sensorAPI[uid].CALLBACK_MOTION_DETECTED, cbFuns[uid]) # Register callback function
