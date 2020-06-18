@@ -9,8 +9,8 @@ indir <- sprintf("/mnt/big/nick/cams/%s", camID)
 writeLines(sprintf("Movie directory: %s", indir))
 outfile <- sprintf("night_%s.mp4", basename(indir))
 tempTextFile <- sprintf("/tmp/vidfiles%d.txt", as.integer(Sys.time()))
-sampleSize <- 60
-seconds_per_video <- 3
+#sampleSize <- 60
+seconds_per_video <- 5
 speedup_factor <- 2
 video <- data.table(datei = list.files(indir, pattern="mp4|ogg"))
 stopifnot(nrow(video) > 0)
@@ -21,7 +21,7 @@ video[, sunrise := as.numeric(format(sunrise, "%H")) + as.numeric(format(sunrise
 video[, sunsetStart := getSunlightTimes(date = as.Date(zeit), lat = 46.93, lon = 7.415, tz = "CET")$sunsetStart]
 video[, sunsetStart := as.numeric(format(sunsetStart, "%H")) + as.numeric(format(sunsetStart, "%M")) / 60]
 video[, tag := stunde > sunrise & stunde < sunsetStart]
-video[, nacht := stunde < sunrise & stunde > 1]
+video[, nacht := stunde < 6 & stunde > 3]
 #video[nacht==TRUE, id := 1:nrow(video[nacht == TRUE,])]
 #video[nacht==TRUE, wahl := id %in% sample(1:nrow(video[nacht == TRUE,]), sampleSize)]
 #video[is.na(wahl), "wahl"] <- FALSE
@@ -65,7 +65,7 @@ for (v in video[nacht==TRUE, datei]) {
 
 cmd <- sprintf("seq_check.py %s", framedir)
 writeLines(cmd)
-system(cmd)
+#system(cmd)
 
 framefiles <- list.files(framedir, full.names = TRUE)
 for (i in 1:length(framefiles)) {
