@@ -1,0 +1,17 @@
+# Copy to /etc/systemd/system/tinker_raspi_relais.service
+# systemctl daemon-reload
+# systemctl enable tinker_raspi_relais.service
+# systemctl start tinker_raspi_relais.service
+
+[Unit]
+Description=tinker_raspi_relais
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/usr/bin/tinker_raspi_relais.py
+User=pi
+
+[Install]
+WantedBy=multi-user.target
