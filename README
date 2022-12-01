@@ -82,5 +82,4 @@ Lets Encrypt Certificate
 # cat /etc/letsencrypt/live/example.org/cert.pem /etc/letsencrypt/live/example.org/privkey.pem >/etc/letsencrypt/live/example.org/web.pem
 # service lighttpd restart (needed or will it reload the cert at some point anyway?)
 
-Recommended Android XMPP client: Conversations from F-Droid
-Alternative: Xabber also works, but not perfect.
+Recommended Android XMPP client: Conversations from F-Droid, or the slightly improved fork blabber.im
