@@ -1,0 +1,17 @@
+# Copy to /etc/systemd/system/dog.service
+# systemctl daemon-reload
+# systemctl enable dog.service
+# systemctl start dog.service
+
+[Unit]
+Description=dog
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/usr/bin/dog.py
+User=pi
+
+[Install]
+WantedBy=multi-user.target
