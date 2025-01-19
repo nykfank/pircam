@@ -4,7 +4,7 @@ from tinkerforge.bricklet_motion_detector import BrickletMotionDetector
 from tinkerforge.bricklet_motion_detector_v2 import BrickletMotionDetectorV2
 import time, subprocess, os, signal, random
 tinkerforge_uid = 'MLF'
-tinkerforge_address = '192.168.1.209' # Server to fetch videos
+tinkerforge_address = 'localhost'
 verbose = True
 event_lock = False
 log_fn = '/home/pi/sensodog.log'
